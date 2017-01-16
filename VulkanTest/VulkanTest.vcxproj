@@ -155,6 +155,10 @@
     <ClInclude Include="Source\VDeleter.h" />
     <ClInclude Include="Source\VulkanApp.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Source\GLSL\shader.frag" />
+    <None Include="Source\GLSL\shader.vert" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

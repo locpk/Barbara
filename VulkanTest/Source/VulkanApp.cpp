@@ -1,7 +1,27 @@
 #include "VulkanApp.h"
 #include <iostream>
+#include <algorithm>
 #include <unordered_set>
 #include <string>
+#include <fstream>
+
+
+static std::vector<char> readFile(const std::string& filename)
+{
+	std::ifstream file(filename, std::ios::ate | std::ios::binary);
+
+	if (!file.is_open()) 
+	{
+		throw std::runtime_error("failed to open file!");
+	}
+
+	size_t fileSize = static_cast<size_t>(file.tellg());
+	std::vector<char> buffer(fileSize);
+	file.seekg(0);
+	file.read(buffer.data(), fileSize);
+	file.close();
+	return buffer;
+}
 
 
 
@@ -59,7 +79,7 @@ bool VulkanApp::isDeviceSuitable(VkPhysicalDevice device)
 	bool extensionsSupported = checkDeviceExtensionSupport(device);
 
 	bool swapChainAdequate = false;
-	if (extensionsSupported) 
+	if (extensionsSupported)
 	{
 		SwapChainSupportDetails swapChainSupport = std::move(querySwapChainSupport(device));
 		swapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
@@ -68,21 +88,21 @@ bool VulkanApp::isDeviceSuitable(VkPhysicalDevice device)
 	return physicalDeviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU &&
 		physicalDeviceFeatures.geometryShader	&&
 		physicalDeviceFeatures.multiViewport	&&
-		indices.isComplete()					&&
+		indices.isComplete() &&
 		extensionsSupported						&&
 		swapChainAdequate;
 }
 
 VkSurfaceFormatKHR VulkanApp::chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats)
 {
-	if (availableFormats.size() == 1 && availableFormats[0].format == VK_FORMAT_UNDEFINED) 
+	if (availableFormats.size() == 1 && availableFormats[0].format == VK_FORMAT_UNDEFINED)
 	{
 		return{ VK_FORMAT_B8G8R8A8_UNORM, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR };
 	}
 
-	for (const auto& availableFormat : availableFormats) 
+	for (const auto& availableFormat : availableFormats)
 	{
-		if (availableFormat.format == VK_FORMAT_B8G8R8A8_UNORM && availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) 
+		if (availableFormat.format == VK_FORMAT_B8G8R8A8_UNORM && availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
 		{
 			return availableFormat;
 		}
@@ -93,9 +113,9 @@ VkSurfaceFormatKHR VulkanApp::chooseSwapSurfaceFormat(const std::vector<VkSurfac
 
 VkPresentModeKHR VulkanApp::chooseSwapPresentMode(const std::vector<VkPresentModeKHR> availablePresentModes)
 {
-	for (const auto& availablePresentMode : availablePresentModes) 
+	for (const auto& availablePresentMode : availablePresentModes)
 	{
-		if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR) 
+		if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR)
 		{
 			return availablePresentMode;
 		}
@@ -103,6 +123,110 @@ VkPresentModeKHR VulkanApp::chooseSwapPresentMode(const std::vector<VkPresentMod
 	return VK_PRESENT_MODE_FIFO_KHR;
 }
 
+VkExtent2D VulkanApp::chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities)
+{
+	if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max())
+	{
+		return capabilities.currentExtent;
+	}
+	else
+	{
+		VkExtent2D actualExtent = { WIDTH,HEIGHT };
+		actualExtent.width = std::max(capabilities.maxImageExtent.width, std::min(capabilities.minImageExtent.width, actualExtent.width));
+		actualExtent.height = std::max(capabilities.maxImageExtent.height, std::min(capabilities.minImageExtent.height, actualExtent.height));
+		return actualExtent;
+	}
+}
+
+void  VulkanApp::createSwapChain()
+{
+	SwapChainSupportDetails swapChainSupport = querySwapChainSupport(physicalDevice);
+	auto surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.formats);
+	auto presentMode = chooseSwapPresentMode(swapChainSupport.presentModes);
+	auto extent = chooseSwapExtent(swapChainSupport.capabilities);
+
+	uint32_t imageCount = swapChainSupport.capabilities.minImageCount + 1;
+	if (swapChainSupport.capabilities.maxImageCount > 0 && imageCount > swapChainSupport.capabilities.maxImageCount)
+	{
+		imageCount = swapChainSupport.capabilities.maxImageCount;
+	}
+
+
+	VkSwapchainCreateInfoKHR createInfo{};
+	createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+	createInfo.surface = surface;
+	createInfo.minImageCount = imageCount;
+	createInfo.imageExtent = extent;
+	createInfo.imageFormat = surfaceFormat.format;
+	createInfo.imageColorSpace = surfaceFormat.colorSpace;
+	createInfo.imageArrayLayers = 1;
+	createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+
+	QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
+
+	if (indices.graphicsFamily != indices.presentFamily)
+	{
+		uint32_t queueFamilyIndices[] = { static_cast<uint32_t>(indices.graphicsFamily),static_cast<uint32_t>(indices.presentFamily) };
+		createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
+		createInfo.queueFamilyIndexCount = 2;
+		createInfo.pQueueFamilyIndices = queueFamilyIndices;
+	}
+	else
+	{
+		createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+	}
+	createInfo.preTransform = swapChainSupport.capabilities.currentTransform;
+	createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+	createInfo.presentMode = presentMode;
+	createInfo.clipped = VK_TRUE;
+	createInfo.oldSwapchain = VK_NULL_HANDLE;
+
+	if (vkCreateSwapchainKHR(device, &createInfo, nullptr, swapChain.replace()) != VK_SUCCESS)
+	{
+		throw std::runtime_error("failed to create swap chain!");
+	}
+
+
+	vkGetSwapchainImagesKHR(device, swapChain, &imageCount, nullptr);
+	swapChainImages.resize(imageCount);
+	vkGetSwapchainImagesKHR(device, swapChain, &imageCount, swapChainImages.data());
+	swapChainExtent = extent;
+	swapChainImageFormat = surfaceFormat.format;
+}
+
+void VulkanApp::createImageViews()
+{
+	swapChainImageViews.resize(swapChainImages.size(), VDeleter<VkImageView>{device, vkDestroyImageView});
+	uint32_t index = 0;
+	for (auto& image : swapChainImages)
+	{
+		VkImageViewCreateInfo createInfo = {};
+		createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+		createInfo.image = image;
+		createInfo.format = swapChainImageFormat;
+		createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+		createInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+		createInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+		createInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+		createInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+		createInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		createInfo.subresourceRange.baseMipLevel = 0;
+		createInfo.subresourceRange.levelCount = 1;
+		createInfo.subresourceRange.baseArrayLayer = 0;
+		createInfo.subresourceRange.layerCount = 1;
+		if (vkCreateImageView(device, &createInfo, nullptr, swapChainImageViews[index].replace()) != VK_SUCCESS)
+		{
+			throw std::runtime_error("failed to create image views!");
+		}
+		index++;
+	}
+}
+
+void VulkanApp::createGraphicsPipeline()
+{
+	auto vertexShader = readFile("Source/GLSL/shader.vert.spv");
+	auto fragShader = readFile("Source/GLSL/shader.frag.spv");
+}
 
 QueueFamilyIndices VulkanApp::findQueueFamilies(VkPhysicalDevice device)
 {
@@ -408,6 +532,9 @@ void VulkanApp::initVulkan()
 	createSurface();
 	pickPhysicalDevice();
 	createLogicalDevice();
+	createSwapChain();
+	createImageViews();
+	createGraphicsPipeline();
 }
 
 void VulkanApp::mainLoop() {
