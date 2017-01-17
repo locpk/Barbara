@@ -86,7 +86,10 @@ private:
 	void createSurface();
 	void createSwapChain();
 	void createImageViews();
+	void createRenderPass();
 	void createGraphicsPipeline();
+	void createShaderModule(const std::vector<char>& code, VDeleter<VkShaderModule>& shaderModule);
+	void createFramebuffers();
 
 	bool checkDeviceExtensionSupport(VkPhysicalDevice device);
 	bool checkValidationLayerSupport();
@@ -108,6 +111,12 @@ private:
 	VDeleter<VkSwapchainKHR> swapChain{ device, vkDestroySwapchainKHR };
 	std::vector<VkImage> swapChainImages;
 	std::vector<VDeleter<VkImageView>> swapChainImageViews;
+	VDeleter<VkRenderPass> renderPass{ device, vkDestroyRenderPass };
+	VDeleter<VkPipelineLayout> pipelineLayout{ device, vkDestroyPipelineLayout };
+	VDeleter<VkPipeline> graphicsPipeline{ device, vkDestroyPipeline };
+	std::vector<VDeleter<VkFramebuffer>> swapChainFramebuffers;
+
+
 	VkFormat swapChainImageFormat;
 	VkExtent2D swapChainExtent;
 	VkQueue graphicsQueue;
