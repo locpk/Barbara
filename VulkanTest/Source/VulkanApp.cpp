@@ -834,12 +834,15 @@ void VulkanApp::initVulkan()
 	createSemaphores();
 }
 
-void VulkanApp::mainLoop() {
+void VulkanApp::mainLoop()
+{
 	while (!glfwWindowShouldClose(window))
 	{
 		glfwPollEvents();
 		draw();
 	}
+	vkDeviceWaitIdle(device);
+	glfwDestroyWindow(window);
 }
 
 void VulkanApp::draw()
