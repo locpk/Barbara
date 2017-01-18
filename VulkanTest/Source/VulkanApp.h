@@ -90,6 +90,9 @@ private:
 	void createGraphicsPipeline();
 	void createShaderModule(const std::vector<char>& code, VDeleter<VkShaderModule>& shaderModule);
 	void createFramebuffers();
+	void createCommandPool();
+	void createCommandBuffers();
+	void createSemaphores();
 
 	bool checkDeviceExtensionSupport(VkPhysicalDevice device);
 	bool checkValidationLayerSupport();
@@ -103,7 +106,11 @@ private:
 	VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
 	bool isDeviceSuitable(VkPhysicalDevice device);
 
+
+	void draw();
+
 private:
+	//Order matters
 	VDeleter<VkInstance> instance{ vkDestroyInstance };
 	VkPhysicalDevice physicalDevice{ VK_NULL_HANDLE };
 	VDeleter<VkDevice> device{ vkDestroyDevice };
@@ -115,6 +122,10 @@ private:
 	VDeleter<VkPipelineLayout> pipelineLayout{ device, vkDestroyPipelineLayout };
 	VDeleter<VkPipeline> graphicsPipeline{ device, vkDestroyPipeline };
 	std::vector<VDeleter<VkFramebuffer>> swapChainFramebuffers;
+	VDeleter<VkCommandPool> commandPool{ device, vkDestroyCommandPool };
+	std::vector<VkCommandBuffer> commandBuffers;
+	VDeleter<VkSemaphore> imageAvailableSemaphore{ device, vkDestroySemaphore };
+	VDeleter<VkSemaphore> renderFinishedSemaphore{ device, vkDestroySemaphore };
 
 
 	VkFormat swapChainImageFormat;
