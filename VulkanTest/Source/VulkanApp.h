@@ -72,7 +72,7 @@ class VulkanApp
 {
 public:
 	void run();
-
+	void recreateSwapChain();
 private:
 	GLFWwindow* window;
 
@@ -93,6 +93,8 @@ private:
 	void createCommandPool();
 	void createCommandBuffers();
 	void createSemaphores();
+
+	
 
 	bool checkDeviceExtensionSupport(VkPhysicalDevice device);
 	bool checkValidationLayerSupport();
