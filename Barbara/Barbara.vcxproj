@@ -19,7 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{6831773C-E542-4BEA-8275-F700786AA5F7}</ProjectGuid>
+    <ProjectGuid>{1735F4DE-20A4-4D2A-BD96-CD3C252DB043}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>VulkanTest</RootNamespace>
     <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>

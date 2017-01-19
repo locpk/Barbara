@@ -94,8 +94,13 @@ private:
 	void createCommandBuffers();
 	void createSemaphores();
 
-	
+	void InitVertexBuffer();
+	void InitIndexBuffer();
 
+	void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VDeleter<VkBuffer>& buffer, VDeleter<VkDeviceMemory>& bufferMemory);
+	void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
+
+	uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 	bool checkDeviceExtensionSupport(VkPhysicalDevice device);
 	bool checkValidationLayerSupport();
 	bool checkGLFWRequiredExtensions();
@@ -125,10 +130,16 @@ private:
 	VDeleter<VkPipeline> graphicsPipeline{ device, vkDestroyPipeline };
 	std::vector<VDeleter<VkFramebuffer>> swapChainFramebuffers;
 	VDeleter<VkCommandPool> commandPool{ device, vkDestroyCommandPool };
+	VDeleter<VkCommandPool> transferCommandPool{ device, vkDestroyCommandPool };
 	std::vector<VkCommandBuffer> commandBuffers;
 	VDeleter<VkSemaphore> imageAvailableSemaphore{ device, vkDestroySemaphore };
 	VDeleter<VkSemaphore> renderFinishedSemaphore{ device, vkDestroySemaphore };
 
+
+	VDeleter<VkBuffer> vertexBuffer{ device, vkDestroyBuffer };
+	VDeleter<VkDeviceMemory> vertexBufferMemory{ device, vkFreeMemory };
+	VDeleter<VkBuffer> indexBuffer{ device, vkDestroyBuffer };
+	VDeleter<VkDeviceMemory> indexBufferMemory{ device, vkFreeMemory };
 
 	VkFormat swapChainImageFormat;
 	VkExtent2D swapChainExtent;
