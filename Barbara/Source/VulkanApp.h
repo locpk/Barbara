@@ -94,6 +94,7 @@ private:
 	void createCommandBuffers();
 	void createSemaphores();
 
+	void InitVIBuffer();
 	void InitVertexBuffer();
 	void InitIndexBuffer();
 
@@ -140,6 +141,9 @@ private:
 	VDeleter<VkDeviceMemory> vertexBufferMemory{ device, vkFreeMemory };
 	VDeleter<VkBuffer> indexBuffer{ device, vkDestroyBuffer };
 	VDeleter<VkDeviceMemory> indexBufferMemory{ device, vkFreeMemory };
+
+	VDeleter<VkBuffer> viBuffer{ device, vkDestroyBuffer };
+	VDeleter<VkDeviceMemory> viBufferMemory{ device, vkFreeMemory };
 
 	VkFormat swapChainImageFormat;
 	VkExtent2D swapChainExtent;

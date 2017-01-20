@@ -898,10 +898,13 @@ void VulkanApp::createCommandBuffers()
 		vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
 
-		VkBuffer vertexBuffers[] = { vertexBuffer };
+
+		VkBuffer vertexBuffers[] = { viBuffer };
 		VkDeviceSize offsets[] = { 0 };
 		vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
-		vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT16);
+		vkCmdBindIndexBuffer(commandBuffer, viBuffer, sizeof(vertices[0]) * vertices.size(), VK_INDEX_TYPE_UINT16);
+
+
 		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
 		vkCmdEndRenderPass(commandBuffer);
 
@@ -939,9 +942,32 @@ void VulkanApp::InitVertexBuffer()
 	memcpy(data, vertices.data(), (size_t)bufferSize);
 	vkUnmapMemory(device, stagingBufferMemory);
 
-	createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vertexBuffer, vertexBufferMemory);
+	createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vertexBuffer, vertexBufferMemory);
 
 	copyBuffer(stagingBuffer, vertexBuffer, bufferSize);
+}
+
+
+void VulkanApp::InitVIBuffer()
+{
+	VkDeviceSize vertexBuffserSize = sizeof(vertices[0]) * vertices.size();
+	VkDeviceSize indexBuffserSize = sizeof(indices[0]) * indices.size();
+	VkDeviceSize totalSize = vertexBuffserSize + indexBuffserSize;
+
+	VDeleter<VkBuffer> stagingBuffer{ device, vkDestroyBuffer };
+	VDeleter<VkDeviceMemory> stagingBufferMemory{ device, vkFreeMemory };
+	createBuffer(totalSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+
+	void* data;
+	vkMapMemory(device, stagingBufferMemory, 0, totalSize, 0, &data);
+	void* indexdattEntry = static_cast<void*>(static_cast<char*>(data) + vertexBuffserSize);
+	memcpy(data, vertices.data(), (size_t)vertexBuffserSize);
+	memcpy(indexdattEntry, indices.data(), (size_t)indexBuffserSize);
+	vkUnmapMemory(device, stagingBufferMemory);
+
+	createBuffer(totalSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, viBuffer, viBufferMemory);
+
+	copyBuffer(stagingBuffer, viBuffer, totalSize);
 }
 
 void VulkanApp::InitIndexBuffer()
@@ -1042,8 +1068,7 @@ void VulkanApp::initVulkan()
 	createGraphicsPipeline();
 	createFramebuffers();
 	createCommandPool();
-	InitVertexBuffer();
-	InitIndexBuffer();
+	InitVIBuffer();
 	createCommandBuffers();
 	createSemaphores();
 }
