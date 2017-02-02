@@ -22,7 +22,7 @@
     <ProjectGuid>{1735F4DE-20A4-4D2A-BD96-CD3C252DB043}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>VulkanTest</RootNamespace>
-    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.14393.0</WindowsTargetPlatformVersion>
     <ProjectName>Barbara</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -102,12 +102,12 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>E:\VulkanSDK\1.0.37.0\Include;C:\Users\locpk\Documents\Visual Studio 2015\Lib\glm;C:\Users\locpk\Documents\Visual Studio 2015\Lib\glfw-3.2.1.bin.WIN64\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\locpk\Documents\Visual Studio 2015\Lib\glm;C:\Users\locpk\Documents\Visual Studio 2015\Lib\glfw-3.2.1.bin.WIN64\include;E:\VulkanSDK\1.0.39.1\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>E:\VulkanSDK\1.0.37.0\Bin;C:\Users\locpk\Documents\Visual Studio 2015\Lib\glfw-3.2.1.bin.WIN64\lib-vc2015;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>E:\VulkanSDK\1.0.39.1\Bin;C:\Users\locpk\Documents\Visual Studio 2015\Lib\glfw-3.2.1.bin.WIN64\lib-vc2015;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>glfw3.lib;vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -137,14 +137,14 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>E:\VulkanSDK\1.0.37.0\Include;C:\Users\locpk\Documents\Visual Studio 2015\Lib\glm;C:\Users\locpk\Documents\Visual Studio 2015\Lib\glfw-3.2.1.bin.WIN64\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\locpk\Documents\Visual Studio 2015\Lib\glm;C:\Users\locpk\Documents\Visual Studio 2015\Lib\glfw-3.2.1.bin.WIN64\include;E:\VulkanSDK\1.0.39.1\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>E:\VulkanSDK\1.0.37.0\Bin;C:\Users\locpk\Documents\Visual Studio 2015\Lib\glfw-3.2.1.bin.WIN64\lib-vc2015;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>E:\VulkanSDK\1.0.39.1\Bin;C:\Users\locpk\Documents\Visual Studio 2015\Lib\glfw-3.2.1.bin.WIN64\lib-vc2015;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>glfw3.lib;vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -153,6 +153,7 @@
     <ClCompile Include="Source\VulkanApp.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Source\stb_image.h" />
     <ClInclude Include="Source\VDeleter.h" />
     <ClInclude Include="Source\VulkanApp.h" />
   </ItemGroup>

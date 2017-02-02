@@ -32,6 +32,9 @@
     <ClInclude Include="Source\VulkanApp.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Source\stb_image.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Source\GLSL\shader.frag">
