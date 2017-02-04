@@ -87,6 +87,9 @@ private:
 	void createSwapChain();
 	void createImageViews();
 	void createRenderPass();
+	void createDescriptorSetLayout();
+	void createDescriptorPool();
+	void createDescriptorSet();
 	void createGraphicsPipeline();
 	void createShaderModule(const std::vector<char>& code, VDeleter<VkShaderModule>& shaderModule);
 	void createFramebuffers();
@@ -97,6 +100,7 @@ private:
 	void InitVIBuffer();
 	void InitVertexBuffer();
 	void InitIndexBuffer();
+	void InitUniformBuffer();
 
 	void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VDeleter<VkBuffer>& buffer, VDeleter<VkDeviceMemory>& bufferMemory);
 	void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
@@ -114,7 +118,7 @@ private:
 	VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
 	bool isDeviceSuitable(VkPhysicalDevice device);
 
-
+	void update();
 	void draw();
 
 private:
@@ -127,6 +131,8 @@ private:
 	std::vector<VkImage> swapChainImages;
 	std::vector<VDeleter<VkImageView>> swapChainImageViews;
 	VDeleter<VkRenderPass> renderPass{ device, vkDestroyRenderPass };
+	VDeleter<VkDescriptorSetLayout> descriptorSetLayout{ device, vkDestroyDescriptorSetLayout };
+	VDeleter<VkDescriptorPool> descriptorPool{ device, vkDestroyDescriptorPool };
 	VDeleter<VkPipelineLayout> pipelineLayout{ device, vkDestroyPipelineLayout };
 	VDeleter<VkPipeline> graphicsPipeline{ device, vkDestroyPipeline };
 	std::vector<VDeleter<VkFramebuffer>> swapChainFramebuffers;
@@ -145,10 +151,16 @@ private:
 	VDeleter<VkBuffer> viBuffer{ device, vkDestroyBuffer };
 	VDeleter<VkDeviceMemory> viBufferMemory{ device, vkFreeMemory };
 
+	VDeleter<VkBuffer> uniformStagingBuffer{ device, vkDestroyBuffer };
+	VDeleter<VkDeviceMemory> uniformStagingBufferMemory{ device, vkFreeMemory };
+	VDeleter<VkBuffer> uniformBuffer{ device, vkDestroyBuffer };
+	VDeleter<VkDeviceMemory> uniformBufferMemory{ device, vkFreeMemory };
+
 	VkFormat swapChainImageFormat;
 	VkExtent2D swapChainExtent;
 	VkQueue graphicsQueue;
 	VkQueue presentQueue;
+	VkDescriptorSet descriptorSet;
 
 	VDeleter<VkDebugReportCallbackEXT> callback{ instance,DestroyDebugReportCallbackEXT };
 
