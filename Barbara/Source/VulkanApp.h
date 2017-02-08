@@ -48,7 +48,7 @@ VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
 
 
 
-struct QueueFamilyIndices 
+struct QueueFamilyIndices
 {
 	int graphicsFamily = -1;
 	int presentFamily = -1;
@@ -59,7 +59,7 @@ struct QueueFamilyIndices
 	}
 };
 
-struct SwapChainSupportDetails 
+struct SwapChainSupportDetails
 {
 	VkSurfaceCapabilitiesKHR capabilities;
 	std::vector<VkSurfaceFormatKHR> formats;
@@ -96,19 +96,18 @@ private:
 	void createCommandPool();
 	void createCommandBuffers();
 	void createSemaphores();
+	void createDepthResources();
 	void createTextureImage();
 	void createTextureImageView();
 	void createTextureSampler();
 
 
 	void InitVIBuffer();
-	void InitVertexBuffer();
-	void InitIndexBuffer();
 	void InitUniformBuffer();
 	void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
 
 	void createImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VDeleter<VkImage>& image, VDeleter<VkDeviceMemory>& imageMemory);
-	void createImageView(VkImage image, VkFormat format, VDeleter<VkImageView>& imageView);
+	void createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags, VDeleter<VkImageView>& imageView);
 	void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VDeleter<VkBuffer>& buffer, VDeleter<VkDeviceMemory>& bufferMemory);
 	void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 	void copyImage(VkImage srcImage, VkImage dstImage, uint32_t width, uint32_t height);
@@ -116,7 +115,20 @@ private:
 
 
 
-
+	//Helper
+	VkFormat findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
+	inline VkFormat findDepthFormat()
+	{
+		return findSupportedFormat(
+		{ VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT },
+			VK_IMAGE_TILING_OPTIMAL,
+			VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT
+		);
+	};
+	inline bool hasStencilComponent(VkFormat format)
+	{
+		return format == VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT;
+	};
 	uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 	bool checkDeviceExtensionSupport(VkPhysicalDevice device);
 	bool checkValidationLayerSupport();
@@ -158,18 +170,19 @@ private:
 	VDeleter<VkSemaphore> renderFinishedSemaphore{ device, vkDestroySemaphore };
 
 
+	VDeleter<VkImage> depthImage{ device, vkDestroyImage };
+	VDeleter<VkDeviceMemory> depthImageMemory{ device, vkFreeMemory };
+	VDeleter<VkImageView> depthImageView{ device, vkDestroyImageView };
+
+	VDeleter<VkBuffer> viBuffer{ device, vkDestroyBuffer };
+	VDeleter<VkDeviceMemory> viBufferMemory{ device, vkFreeMemory };
+
+
 	VDeleter<VkImage> textureImage{ device, vkDestroyImage };
 	VDeleter<VkDeviceMemory> textureImageMemory{ device, vkFreeMemory };
 	VDeleter<VkImageView> textureImageView{ device, vkDestroyImageView };
 	VDeleter<VkSampler> textureSampler{ device, vkDestroySampler };
 
-	VDeleter<VkBuffer> vertexBuffer{ device, vkDestroyBuffer };
-	VDeleter<VkDeviceMemory> vertexBufferMemory{ device, vkFreeMemory };
-	VDeleter<VkBuffer> indexBuffer{ device, vkDestroyBuffer };
-	VDeleter<VkDeviceMemory> indexBufferMemory{ device, vkFreeMemory };
-
-	VDeleter<VkBuffer> viBuffer{ device, vkDestroyBuffer };
-	VDeleter<VkDeviceMemory> viBufferMemory{ device, vkFreeMemory };
 
 	VDeleter<VkBuffer> uniformStagingBuffer{ device, vkDestroyBuffer };
 	VDeleter<VkDeviceMemory> uniformStagingBufferMemory{ device, vkFreeMemory };
