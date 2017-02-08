@@ -96,14 +96,26 @@ private:
 	void createCommandPool();
 	void createCommandBuffers();
 	void createSemaphores();
+	void createTextureImage();
+	void createTextureImageView();
+	void createTextureSampler();
+
 
 	void InitVIBuffer();
 	void InitVertexBuffer();
 	void InitIndexBuffer();
 	void InitUniformBuffer();
+	void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
 
+	void createImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VDeleter<VkImage>& image, VDeleter<VkDeviceMemory>& imageMemory);
+	void createImageView(VkImage image, VkFormat format, VDeleter<VkImageView>& imageView);
 	void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VDeleter<VkBuffer>& buffer, VDeleter<VkDeviceMemory>& bufferMemory);
 	void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
+	void copyImage(VkImage srcImage, VkImage dstImage, uint32_t width, uint32_t height);
+
+
+
+
 
 	uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 	bool checkDeviceExtensionSupport(VkPhysicalDevice device);
@@ -117,6 +129,9 @@ private:
 	VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR> availablePresentModes);
 	VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
 	bool isDeviceSuitable(VkPhysicalDevice device);
+
+	VkCommandBuffer beginSingleTimeCommands();
+	void endSingleTimeCommands(VkCommandBuffer commandBuffer);
 
 	void update();
 	void draw();
@@ -142,6 +157,11 @@ private:
 	VDeleter<VkSemaphore> imageAvailableSemaphore{ device, vkDestroySemaphore };
 	VDeleter<VkSemaphore> renderFinishedSemaphore{ device, vkDestroySemaphore };
 
+
+	VDeleter<VkImage> textureImage{ device, vkDestroyImage };
+	VDeleter<VkDeviceMemory> textureImageMemory{ device, vkFreeMemory };
+	VDeleter<VkImageView> textureImageView{ device, vkDestroyImageView };
+	VDeleter<VkSampler> textureSampler{ device, vkDestroySampler };
 
 	VDeleter<VkBuffer> vertexBuffer{ device, vkDestroyBuffer };
 	VDeleter<VkDeviceMemory> vertexBufferMemory{ device, vkFreeMemory };
