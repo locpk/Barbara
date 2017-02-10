@@ -3,73 +3,17 @@
 #include <algorithm>
 #include <unordered_set>
 #include <string>
+#include <unordered_map>
 #include <fstream>
-#define GLM_FORCE_RADIANS
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
+#define TINYOBJLOADER_IMPLEMENTATION
+#include "tiny_obj_loader.h"
 
-#include <chrono>
-#include <array>
 
 
-struct Vertex
-{
-	glm::vec3 pos;
-	glm::vec3 color;
-	glm::vec2 texCoord;
 
-	static VkVertexInputBindingDescription getBindingDescription()
-	{
-		VkVertexInputBindingDescription bindingDescription = {};
-		bindingDescription.binding = 0;
-		bindingDescription.stride = sizeof(Vertex);
-		bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-		return bindingDescription;
-	}
 
-	static std::array<VkVertexInputAttributeDescription, 3> getAttributeDescriptions() {
-		std::array<VkVertexInputAttributeDescription, 3> attributeDescriptions = {};
-
-		attributeDescriptions[0].binding = 0;
-		attributeDescriptions[0].location = 0;
-		attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
-		attributeDescriptions[0].offset = offsetof(Vertex, pos);
-
-		attributeDescriptions[1].binding = 0;
-		attributeDescriptions[1].location = 1;
-		attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
-		attributeDescriptions[1].offset = offsetof(Vertex, color);
-
-		attributeDescriptions[2].binding = 0;
-		attributeDescriptions[2].location = 2;
-		attributeDescriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
-		attributeDescriptions[2].offset = offsetof(Vertex, texCoord);
-
-		return attributeDescriptions;
-	}
-};
-
-const std::vector<Vertex> vertices =
-{
-	{ { -0.5f, -0.5f, 0.0f },{ 1.0f, 0.0f, 0.0f },{ 0.0f, 0.0f } },
-	{ { 0.5f, -0.5f, 0.0f },{ 0.0f, 1.0f, 0.0f },{ 1.0f, 0.0f } },
-	{ { 0.5f, 0.5f, 0.0f },{ 0.0f, 0.0f, 1.0f },{ 1.0f, 1.0f } },
-	{ { -0.5f, 0.5f, 0.0f },{ 1.0f, 1.0f, 1.0f },{ 0.0f, 1.0f } },
-
-	{ { -0.5f, -0.5f, -0.5f },{ 1.0f, 0.0f, 0.0f },{ 0.0f, 0.0f } },
-	{ { 0.5f, -0.5f, -0.5f },{ 0.0f, 1.0f, 0.0f },{ 1.0f, 0.0f } },
-	{ { 0.5f, 0.5f, -0.5f },{ 0.0f, 0.0f, 1.0f },{ 1.0f, 1.0f } },
-	{ { -0.5f, 0.5f, -0.5f },{ 1.0f, 1.0f, 1.0f },{ 0.0f, 1.0f } }
-};
-
-const std::vector<uint16_t> indices =
-{
-	0, 1, 2, 2, 3, 0,
-	4, 5, 6, 6, 7, 4
-};
 
 struct UniformBuffer
 {
@@ -78,6 +22,9 @@ struct UniformBuffer
 	glm::mat4 proj;
 };
 
+
+const std::string MODEL_PATH = "Source/models/CESAR.obj";
+const std::string TEXTURE_PATH = "Source/textures/CESAR.jpg";
 
 static std::vector<char> readFile(const std::string& filename)
 {
@@ -313,7 +260,7 @@ void  VulkanApp::createTextureImage()
 {
 	int texWidth, texHeight, texChannels;
 	stbi_set_flip_vertically_on_load(true);
-	auto pixels = stbi_load("Source/textures/test.jpg", &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+	auto pixels = stbi_load(TEXTURE_PATH.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
 	VkDeviceSize imageSize = texWidth * texHeight * 4;
 	if (nullptr == pixels)
 	{
@@ -1147,7 +1094,7 @@ void VulkanApp::createCommandBuffers()
 
 		std::array<VkClearValue, 2> clearColors = {};
 		clearColors[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
-		clearColors[1].depthStencil = { 1.0f,0};
+		clearColors[1].depthStencil = { 1.0f,0 };
 		renderPassInfo.clearValueCount = static_cast<uint32_t>(clearColors.size());
 		renderPassInfo.pClearValues = clearColors.data();
 
@@ -1158,7 +1105,7 @@ void VulkanApp::createCommandBuffers()
 		VkBuffer vertexBuffers[] = { viBuffer };
 		VkDeviceSize offsets[] = { 0 };
 		vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
-		vkCmdBindIndexBuffer(commandBuffer, viBuffer, sizeof(vertices[0]) * vertices.size(), VK_INDEX_TYPE_UINT16);
+		vkCmdBindIndexBuffer(commandBuffer, viBuffer, sizeof(vertices[0]) * vertices.size(), VK_INDEX_TYPE_UINT32);
 
 		//Binding resources
 		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSet, 0, nullptr);
@@ -1188,7 +1135,47 @@ void VulkanApp::createSemaphores()
 }
 
 
+void VulkanApp::loadModel()
+{
+	tinyobj::attrib_t attrib;
+	std::vector<tinyobj::shape_t> shapes;
+	std::vector<tinyobj::material_t> materials;
+	std::string err;
+	if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &err, MODEL_PATH.c_str()))
+	{
+		throw std::runtime_error(err);
+	}
 
+	std::unordered_map<Vertex, int> uniqueVertices = {};
+	for (const auto& shape : shapes) {
+		for (const auto& index : shape.mesh.indices)
+		{
+			Vertex vertex = {};
+			vertex.pos =
+			{
+				attrib.vertices[3 * index.vertex_index + 0],
+				attrib.vertices[3 * index.vertex_index + 1],
+				attrib.vertices[3 * index.vertex_index + 2]
+			};
+
+			vertex.texCoord =
+			{
+				attrib.texcoords[2 * index.texcoord_index + 0],
+				attrib.texcoords[2 * index.texcoord_index + 1]
+			};
+
+			vertex.color = { 1.0f, 1.0f, 1.0f };
+
+			if (uniqueVertices.count(vertex) == 0) 
+			{
+				uniqueVertices[vertex] = vertices.size();
+				vertices.push_back(vertex);
+			}
+
+			indices.push_back(uniqueVertices[vertex]);
+		}
+	}
+}
 
 void VulkanApp::InitVIBuffer()
 {
@@ -1478,6 +1465,7 @@ void VulkanApp::initVulkan()
 	createTextureImage();
 	createTextureImageView();
 	createTextureSampler();
+	loadModel();
 	InitVIBuffer();
 	InitUniformBuffer();
 	createDescriptorPool();
@@ -1507,9 +1495,12 @@ void VulkanApp::update()
 
 
 	UniformBuffer uniformBufferObj = {};
-	uniformBufferObj.model = glm::rotate(glm::mat4(), timeSinceStart * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-	uniformBufferObj.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-	uniformBufferObj.proj = glm::perspective(glm::radians(90.0f), swapChainExtent.width / (float)swapChainExtent.height, 0.1f, 10.0f);
+	uniformBufferObj.model = glm::rotate(glm::mat4(), glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+	uniformBufferObj.model = glm::rotate(uniformBufferObj.model, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+	uniformBufferObj.model = glm::rotate(glm::mat4(), timeSinceStart * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f)) * uniformBufferObj.model;
+	uniformBufferObj.model = glm::scale(uniformBufferObj.model, glm::vec3(0.1f, 0.1f, 0.1f));
+	uniformBufferObj.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+	uniformBufferObj.proj = glm::perspective(glm::radians(40.0f), swapChainExtent.width / (float)swapChainExtent.height, 0.1f, 10.0f);
 	uniformBufferObj.proj[1][1] *= -1;
 
 	void* data;
