@@ -1,10 +1,4 @@
 #include "VulkanApp.h"
-#include <iostream>
-#include <algorithm>
-#include <unordered_set>
-#include <string>
-#include <unordered_map>
-#include <fstream>
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 #define TINYOBJLOADER_IMPLEMENTATION
@@ -26,22 +20,6 @@ struct UniformBuffer
 const std::string MODEL_PATH = "Source/models/CESAR.obj";
 const std::string TEXTURE_PATH = "Source/textures/CESAR.jpg";
 
-static std::vector<char> readFile(const std::string& filename)
-{
-	std::ifstream file(filename, std::ios::ate | std::ios::binary);
-
-	if (!file.is_open())
-	{
-		throw std::runtime_error("failed to open file!");
-	}
-
-	size_t fileSize = static_cast<size_t>(file.tellg());
-	std::vector<char> buffer(fileSize);
-	file.seekg(0);
-	file.read(buffer.data(), fileSize);
-	file.close();
-	return buffer;
-}
 
 
 static void onWindowResized(GLFWwindow* window, int width, int height)
@@ -54,47 +32,7 @@ static void onWindowResized(GLFWwindow* window, int width, int height)
 
 
 
-VkResult CreateDebugReportCallbackEXT(
-	VkInstance instance,
-	const VkDebugReportCallbackCreateInfoEXT* pCreateInfo,
-	const VkAllocationCallbacks* pAllocator,
-	VkDebugReportCallbackEXT* pCallback)
-{
-	auto func = (PFN_vkCreateDebugReportCallbackEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugReportCallbackEXT");
-	if (func != nullptr) {
-		return func(instance, pCreateInfo, pAllocator, pCallback);
-	}
-	else {
-		return VK_ERROR_EXTENSION_NOT_PRESENT;
-	}
-}
 
-void DestroyDebugReportCallbackEXT(
-	VkInstance instance,
-	VkDebugReportCallbackEXT callback,
-	const VkAllocationCallbacks* pAllocator)
-{
-	auto func = (PFN_vkDestroyDebugReportCallbackEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugReportCallbackEXT");
-	if (func != nullptr) {
-		func(instance, callback, pAllocator);
-	}
-}
-
-VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
-	VkDebugReportFlagsEXT flags,
-	VkDebugReportObjectTypeEXT objType,
-	uint64_t obj,
-	size_t location,
-	int32_t code,
-	const char* layerPrefix,
-	const char* msg,
-	void* userData)
-{
-
-	std::cout << "validation layer: " << msg << std::endl;
-
-	return VK_FALSE;
-}
 
 bool VulkanApp::isDeviceSuitable(VkPhysicalDevice device)
 {

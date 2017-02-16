@@ -150,13 +150,16 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Source\Main.cpp" />
+    <ClCompile Include="Source\vkUtility.cpp" />
     <ClCompile Include="Source\VulkanApp.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Source\SharedDefine.h" />
     <ClInclude Include="Source\stb_image.h" />
     <ClInclude Include="Source\tinyobj_loader_opt.h" />
     <ClInclude Include="Source\tiny_obj_loader.h" />
     <ClInclude Include="Source\VDeleter.h" />
+    <ClInclude Include="Source\vkUtility.h" />
     <ClInclude Include="Source\VulkanApp.h" />
   </ItemGroup>
   <ItemGroup>
