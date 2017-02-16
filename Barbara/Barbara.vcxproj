@@ -150,10 +150,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Source\Main.cpp" />
+    <ClCompile Include="Source\Mesh.cpp" />
     <ClCompile Include="Source\vkUtility.cpp" />
     <ClCompile Include="Source\VulkanApp.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Source\Mesh.h" />
     <ClInclude Include="Source\SharedDefine.h" />
     <ClInclude Include="Source\stb_image.h" />
     <ClInclude Include="Source\tinyobj_loader_opt.h" />

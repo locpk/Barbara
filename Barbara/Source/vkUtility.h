@@ -1,137 +1,101 @@
 #pragma once
 #include "SharedDefine.h"
 
-
-static const std::vector<const char*> deviceExtensions =
+namespace VkUtilities
 {
-	VK_KHR_SWAPCHAIN_EXTENSION_NAME
-};
 
-static const std::vector<const char*> validationLayers =
-{
-	"VK_LAYER_LUNARG_standard_validation",
-};
+
+	static const std::vector<const char*> deviceExtensions =
+	{
+		VK_KHR_SWAPCHAIN_EXTENSION_NAME
+	};
+
+	static const std::vector<const char*> validationLayers =
+	{
+		"VK_LAYER_LUNARG_standard_validation",
+	};
 #ifdef NDEBUG
-const bool enableValidationLayers = false;
+	const bool enableValidationLayers = false;
 #else
-const bool enableValidationLayers = true;
+	const bool enableValidationLayers = true;
 #endif
 
 
-VkResult CreateDebugReportCallbackEXT(
-	VkInstance instance,
-	const VkDebugReportCallbackCreateInfoEXT* pCreateInfo,
-	const VkAllocationCallbacks* pAllocator,
-	VkDebugReportCallbackEXT* pCallback);
 
-void DestroyDebugReportCallbackEXT(
-	VkInstance instance,
-	VkDebugReportCallbackEXT callback,
-	const VkAllocationCallbacks* pAllocator);
-
-VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
-	VkDebugReportFlagsEXT flags,
-	VkDebugReportObjectTypeEXT objType,
-	uint64_t obj,
-	size_t location,
-	int32_t code,
-	const char* layerPrefix,
-	const char* msg,
-	void* userData);
-
-
-struct QueueFamilyIndices
-{
-	int graphicsFamily = -1;
-	int presentFamily = -1;
-
-	bool isComplete()
+	struct QueueFamilyIndices
 	{
-		return graphicsFamily >= 0 && presentFamily >= 0;
-	}
-};
+		int graphicsFamily = -1;
+		int presentFamily = -1;
 
-struct SwapChainSupportDetails
-{
-	VkSurfaceCapabilitiesKHR capabilities;
-	std::vector<VkSurfaceFormatKHR> formats;
-	std::vector<VkPresentModeKHR> presentModes;
-};
-
-
-
-
-struct Vertex
-{
-	glm::vec3 pos;
-	glm::vec3 color;
-	glm::vec2 texCoord;
-
-
-
-	bool operator==(const Vertex& other) const
-	{
-		return pos == other.pos && color == other.color && texCoord == other.texCoord;
-	}
-
-	static VkVertexInputBindingDescription getBindingDescription()
-	{
-		VkVertexInputBindingDescription bindingDescription = {};
-		bindingDescription.binding = 0;
-		bindingDescription.stride = sizeof(Vertex);
-		bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-		return bindingDescription;
-	}
-
-	static std::array<VkVertexInputAttributeDescription, 3> getAttributeDescriptions() {
-		std::array<VkVertexInputAttributeDescription, 3> attributeDescriptions = {};
-
-		attributeDescriptions[0].binding = 0;
-		attributeDescriptions[0].location = 0;
-		attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
-		attributeDescriptions[0].offset = offsetof(Vertex, pos);
-
-		attributeDescriptions[1].binding = 0;
-		attributeDescriptions[1].location = 1;
-		attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
-		attributeDescriptions[1].offset = offsetof(Vertex, color);
-
-		attributeDescriptions[2].binding = 0;
-		attributeDescriptions[2].location = 2;
-		attributeDescriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
-		attributeDescriptions[2].offset = offsetof(Vertex, texCoord);
-
-		return attributeDescriptions;
-	}
-};
-
-namespace std {
-	template<> struct hash<Vertex> {
-		size_t operator()(Vertex const& vertex) const
+		bool isComplete()
 		{
-			return ((hash<glm::vec3>()(vertex.pos) ^
-				(hash<glm::vec3>()(vertex.color) << 1)) >> 1) ^
-				(hash<glm::vec2>()(vertex.texCoord) << 1);
+			return graphicsFamily >= 0 && presentFamily >= 0;
 		}
 	};
-}
 
-
-static std::vector<char> readFile(const std::string& filename)
-{
-	std::ifstream file(filename, std::ios::ate | std::ios::binary);
-
-	if (!file.is_open())
+	struct SwapChainSupportDetails
 	{
-		throw std::runtime_error("failed to open file!");
-	}
+		VkSurfaceCapabilitiesKHR capabilities;
+		std::vector<VkSurfaceFormatKHR> formats;
+		std::vector<VkPresentModeKHR> presentModes;
+	};
 
-	size_t fileSize = static_cast<size_t>(file.tellg());
-	std::vector<char> buffer(fileSize);
-	file.seekg(0);
-	file.read(buffer.data(), fileSize);
-	file.close();
-	return buffer;
+
+#pragma region DebugHelper
+	VkResult CreateDebugReportCallbackEXT(
+		VkInstance instance,
+		const VkDebugReportCallbackCreateInfoEXT* pCreateInfo,
+		const VkAllocationCallbacks* pAllocator,
+		VkDebugReportCallbackEXT* pCallback);
+
+	void DestroyDebugReportCallbackEXT(
+		VkInstance instance,
+		VkDebugReportCallbackEXT callback,
+		const VkAllocationCallbacks* pAllocator);
+
+	VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
+		VkDebugReportFlagsEXT flags,
+		VkDebugReportObjectTypeEXT objType,
+		uint64_t obj,
+		size_t location,
+		int32_t code,
+		const char* layerPrefix,
+		const char* msg,
+		void* userData);
+
+#pragma endregion
+
+
+
+
+	VkFormat findSupportedFormat(VkPhysicalDevice& physicalDevice, const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
+	inline VkFormat findDepthFormat(VkPhysicalDevice& physicalDevice)
+	{
+		return findSupportedFormat(physicalDevice,
+		{ VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT },
+			VK_IMAGE_TILING_OPTIMAL,
+			VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT
+		);
+	};
+	inline bool hasStencilComponent(VkFormat format)
+	{
+		return format == VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT;
+	};
+
+	bool checkDeviceExtensionSupport(VkPhysicalDevice device);
+	bool checkValidationLayerSupport();
+	bool checkGLFWRequiredExtensions();
+	std::vector<const char*> getRequiredExtensions();
+	
+	QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device, VDeleter<VkSurfaceKHR>& surface);
+	SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device, VDeleter<VkSurfaceKHR>& surface);
+	VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
+	VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR> availablePresentModes);
+	VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
+	bool isDeviceSuitable(VkPhysicalDevice device, VDeleter<VkSurfaceKHR>& surface);
+
+	uint32_t findMemoryType(VkPhysicalDevice& physicalDevice, uint32_t typeFilter, VkMemoryPropertyFlags properties);
+	void createBuffer(VkPhysicalDevice& physicalDevice, VDeleter<VkDevice>& device, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VDeleter<VkBuffer>& buffer, VDeleter<VkDeviceMemory>& bufferMemory);
+
+
 }
-
-
