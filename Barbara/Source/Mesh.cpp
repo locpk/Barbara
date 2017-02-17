@@ -1,16 +1,17 @@
 #include "Mesh.h"
 #define TINYOBJLOADER_IMPLEMENTATION
 #include "tiny_obj_loader.h"
+#include "vkUtility.h"
 
 
 
-Mesh::Mesh(std::string _meshName) : meshName(_meshName)
+Mesh::Mesh(VDeleter<VkDevice>& _device, std::string _meshName) : meshName(_meshName), device(_device)
 {
-	LoadMesh();
+
 }
 
 
-void Mesh::LoadMesh()
+void Mesh::LoadMesh(VkPhysicalDevice& physicalDevice, VDeleter<VkCommandPool>& commandPool, VkQueue& queue)
 {
 	tinyobj::attrib_t attrib;
 	std::vector<tinyobj::shape_t> shapes;
@@ -50,6 +51,30 @@ void Mesh::LoadMesh()
 			indices.push_back(uniqueVertices[vertex]);
 		}
 	}
+	CreateMeshBuffer(physicalDevice, commandPool, queue);
+
+}
+
+void Mesh::CreateMeshBuffer(VkPhysicalDevice& physicalDevice, VDeleter<VkCommandPool>& commandPool, VkQueue& queue)
+{
+	VkDeviceSize vertexBuffserSize = sizeof(vertices[0]) * vertices.size();
+	VkDeviceSize indexBuffserSize = sizeof(indices[0]) * indices.size();
+	VkDeviceSize totalSize = vertexBuffserSize + indexBuffserSize;
+
+	VDeleter<VkBuffer> stagingBuffer{ device, vkDestroyBuffer };
+	VDeleter<VkDeviceMemory> stagingBufferMemory{ device, vkFreeMemory };
+	VkUtilities::createBuffer(physicalDevice, device, totalSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+
+	void* data;
+	vkMapMemory(device, stagingBufferMemory, 0, totalSize, 0, &data);
+	void* indexdataEntry = static_cast<void*>(static_cast<char*>(data) + vertexBuffserSize);
+	memcpy(data, vertices.data(), (size_t)vertexBuffserSize);
+	memcpy(indexdataEntry, indices.data(), (size_t)indexBuffserSize);
+	vkUnmapMemory(device, stagingBufferMemory);
+
+	VkUtilities::createBuffer(physicalDevice, device, totalSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, viBuffer, viBufferMemory);
+
+	VkUtilities::copyBuffer(device, commandPool, queue, stagingBuffer, viBuffer, totalSize);
 }
 
 Mesh::~Mesh()

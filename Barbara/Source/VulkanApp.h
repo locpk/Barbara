@@ -32,7 +32,7 @@ private:
 	void createGraphicsPipeline();
 	void createShaderModule(const std::vector<char>& code, VDeleter<VkShaderModule>& shaderModule);
 	void createFramebuffers();
-	void createCommandPool();
+	void createCommandPools();
 	void createCommandBuffers();
 	void createSemaphores();
 	void createDepthResources();
@@ -41,14 +41,11 @@ private:
 	void createTextureSampler();
 
 
-	void InitVIBuffer();
+
 	void InitUniformBuffer();
 	void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
 
-	void createImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VDeleter<VkImage>& image, VDeleter<VkDeviceMemory>& imageMemory);
-	void createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags, VDeleter<VkImageView>& imageView);
-	void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
-	void copyImage(VkImage srcImage, VkImage dstImage, uint32_t width, uint32_t height);
+	
 
 
 
@@ -56,8 +53,7 @@ private:
 
 	void setupDebugCallback();
 
-	VkCommandBuffer beginSingleTimeCommands();
-	void endSingleTimeCommands(VkCommandBuffer commandBuffer);
+
 
 	void update();
 	void draw();
@@ -91,8 +87,7 @@ private:
 
 	std::unique_ptr<Mesh> testMesh;
 
-	VDeleter<VkBuffer> viBuffer{ device, vkDestroyBuffer };
-	VDeleter<VkDeviceMemory> viBufferMemory{ device, vkFreeMemory };
+
 
 
 	VDeleter<VkImage> textureImage{ device, vkDestroyImage };
@@ -110,6 +105,8 @@ private:
 	VkExtent2D swapChainExtent;
 	VkQueue graphicsQueue;
 	VkQueue presentQueue;
+	VkQueue computeQueue;
+	VkQueue transferQueue;
 	VkDescriptorSet descriptorSet;
 
 	VDeleter<VkDebugReportCallbackEXT> callback{ instance,DestroyDebugReportCallbackEXT };

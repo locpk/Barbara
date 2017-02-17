@@ -26,10 +26,17 @@ namespace VkUtilities
 	{
 		int graphicsFamily = -1;
 		int presentFamily = -1;
+		int transferFamily = -1;
+		int computeFamily = -1;
 
 		bool isComplete()
 		{
-			return graphicsFamily >= 0 && presentFamily >= 0;
+			return graphicsFamily >= 0 && presentFamily >= 0 && transferFamily >= 0;
+		}
+
+		bool isComputeAvaliable()
+		{
+			return computeFamily >= 0;
 		}
 	};
 
@@ -86,7 +93,7 @@ namespace VkUtilities
 	bool checkValidationLayerSupport();
 	bool checkGLFWRequiredExtensions();
 	std::vector<const char*> getRequiredExtensions();
-	
+
 	QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device, VDeleter<VkSurfaceKHR>& surface);
 	SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device, VDeleter<VkSurfaceKHR>& surface);
 	VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
@@ -96,6 +103,14 @@ namespace VkUtilities
 
 	uint32_t findMemoryType(VkPhysicalDevice& physicalDevice, uint32_t typeFilter, VkMemoryPropertyFlags properties);
 	void createBuffer(VkPhysicalDevice& physicalDevice, VDeleter<VkDevice>& device, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VDeleter<VkBuffer>& buffer, VDeleter<VkDeviceMemory>& bufferMemory);
+	void createImage(VkPhysicalDevice& physicalDevice, VDeleter<VkDevice>& device, uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VDeleter<VkImage>& image, VDeleter<VkDeviceMemory>& imageMemory);
+	void createImageView(VDeleter<VkDevice>& device, VkImage image, VkFormat format, VkImageAspectFlags aspectFlags, VDeleter<VkImageView>& imageView);
 
+
+	VkCommandBuffer beginSingleTimeCommands(VDeleter<VkDevice>& device, VDeleter<VkCommandPool>& commandPool);
+	void endSingleTimeCommands(VkCommandBuffer commandBuffer, VDeleter<VkDevice>& device, VDeleter<VkCommandPool>& commandPool, VkQueue& queue);
+
+	void copyBuffer(VDeleter<VkDevice>& device, VDeleter<VkCommandPool>& commandPool, VkQueue& queue, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
+	void copyImage(VDeleter<VkDevice>& device, VDeleter<VkCommandPool>& commandPool, VkQueue& queue, VkImage srcImage, VkImage dstImage, uint32_t width, uint32_t height);
 
 }
