@@ -1,6 +1,4 @@
 #include "VulkanApp.h"
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
 
 
 
@@ -11,9 +9,6 @@ struct UniformBuffer
 	glm::mat4 proj;
 };
 
-
-const std::string MODEL_PATH = "Source/models/CESAR.obj";
-const std::string TEXTURE_PATH = "Source/textures/CESAR.jpg";
 
 
 
@@ -107,77 +102,6 @@ void VulkanApp::recreateSwapChain()
 }
 
 
-void  VulkanApp::createTextureImage()
-{
-	int texWidth, texHeight, texChannels;
-	stbi_set_flip_vertically_on_load(true);
-	auto pixels = stbi_load(TEXTURE_PATH.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
-	VkDeviceSize imageSize = texWidth * texHeight * 4;
-	if (nullptr == pixels)
-	{
-		throw std::runtime_error("failed to load texture image!");
-	}
-
-
-	VDeleter<VkImage> stagingImage{ device, vkDestroyImage };
-	VDeleter<VkDeviceMemory> stagingImageMemory{ device, vkFreeMemory };
-
-	createImage(physicalDevice, device, texWidth, texHeight, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_TILING_LINEAR, VK_IMAGE_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingImage, stagingImageMemory);
-
-
-
-	VkImageSubresource subresource = {};
-	subresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-	subresource.mipLevel = 0;
-	subresource.arrayLayer = 0;
-
-	VkSubresourceLayout stagingImageLayout;
-	vkGetImageSubresourceLayout(device, stagingImage, &subresource, &stagingImageLayout);
-
-	void* data;
-	vkMapMemory(device, stagingImageMemory, 0, imageSize, 0, &data);
-	if (stagingImageLayout.rowPitch == texWidth * 4)
-	{
-		memcpy(data, pixels, (size_t)imageSize);
-	}
-	else
-	{
-		uint8_t* dataBytes = reinterpret_cast<uint8_t*>(data);
-
-		for (int y = 0; y < texHeight; y++)
-		{
-			memcpy(
-				&dataBytes[y * stagingImageLayout.rowPitch],
-				&pixels[y * texWidth * 4],
-				texWidth * 4
-			);
-		}
-	}
-
-	vkUnmapMemory(device, stagingImageMemory);
-	stbi_image_free(pixels);
-
-	createImage(physicalDevice, device,
-		texWidth, texHeight,
-		VK_FORMAT_R8G8B8A8_UNORM,
-		VK_IMAGE_TILING_OPTIMAL,
-		VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
-		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-		textureImage,
-		textureImageMemory
-	);
-
-	transitionImageLayout(stagingImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_PREINITIALIZED, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
-	transitionImageLayout(textureImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_PREINITIALIZED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-	copyImage(device, transferCommandPool, transferQueue, stagingImage, textureImage, texWidth, texHeight);
-	transitionImageLayout(textureImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-}
-
-
-void VulkanApp::createTextureImageView()
-{
-	createImageView(device, textureImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT, textureImageView);
-}
 
 void VulkanApp::createImageViews()
 {
@@ -268,7 +192,7 @@ void VulkanApp::createDescriptorSet()
 	bufferInfo.range = sizeof(UniformBuffer);
 	VkDescriptorImageInfo imageInfo = {};
 	imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-	imageInfo.imageView = textureImageView;
+	imageInfo.imageView = testMesh->GetTextureViews()[0];
 	imageInfo.sampler = textureSampler;
 
 	std::array<VkWriteDescriptorSet, 2> descriptorWrites = {};
@@ -830,7 +754,7 @@ void VulkanApp::createSemaphores()
 
 void VulkanApp::loadModel()
 {
-	testMesh.reset(new Mesh(device));
+	testMesh.reset(new Mesh(device, "head"));
 	testMesh->LoadMesh(physicalDevice, transferCommandPool, transferQueue);
 }
 
@@ -848,70 +772,7 @@ void VulkanApp::InitUniformBuffer()
 
 
 
-void VulkanApp::transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout)
-{
-	VkCommandBuffer commandBuffer = beginSingleTimeCommands(device, transferCommandPool);
 
-	VkImageMemoryBarrier barrier = {};
-	barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-	barrier.oldLayout = oldLayout;
-	barrier.newLayout = newLayout;
-	barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-	barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-	barrier.image = image;
-
-	if (newLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
-	{
-		barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
-
-		if (hasStencilComponent(format))
-		{
-			barrier.subresourceRange.aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
-		}
-	}
-	else
-	{
-		barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-	}
-
-	barrier.subresourceRange.baseMipLevel = 0;
-	barrier.subresourceRange.levelCount = 1;
-	barrier.subresourceRange.baseArrayLayer = 0;
-	barrier.subresourceRange.layerCount = 1;
-	if (oldLayout == VK_IMAGE_LAYOUT_PREINITIALIZED && newLayout == VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL)
-	{
-		barrier.srcAccessMask = VK_ACCESS_HOST_WRITE_BIT;
-		barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
-	}
-	else if (oldLayout == VK_IMAGE_LAYOUT_PREINITIALIZED && newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
-	{
-		barrier.srcAccessMask = VK_ACCESS_HOST_WRITE_BIT;
-		barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-	}
-	else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
-	{
-		barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-		barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-	}
-	else if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
-	{
-		barrier.srcAccessMask = 0;
-		barrier.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-	}
-	else {
-		throw std::invalid_argument("unsupported layout transition!");
-	}
-	vkCmdPipelineBarrier(
-		commandBuffer,
-		VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
-		0,
-		0, nullptr,
-		0, nullptr,
-		1, &barrier
-	);
-
-	endSingleTimeCommands(commandBuffer, device, transferCommandPool, transferQueue);
-}
 
 
 
@@ -920,7 +781,7 @@ void VulkanApp::createDepthResources()
 	VkFormat depthFormat = findDepthFormat(physicalDevice);
 	createImage(physicalDevice, device, swapChainExtent.width, swapChainExtent.height, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage, depthImageMemory);
 	createImageView(device, depthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT, depthImageView);
-	transitionImageLayout(depthImage, depthFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
+	transitionImageLayout(device, transferCommandPool, transferQueue, depthImage, depthFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
 }
 
 void VulkanApp::initVulkan()
@@ -938,10 +799,8 @@ void VulkanApp::initVulkan()
 	createCommandPools();
 	createDepthResources();
 	createFramebuffers();
-	createTextureImage();
-	createTextureImageView();
-	createTextureSampler();
 	loadModel();
+	createTextureSampler();
 	InitUniformBuffer();
 	createDescriptorPool();
 	createDescriptorSet();

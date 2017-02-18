@@ -106,7 +106,7 @@ namespace VkUtilities
 	void createImage(VkPhysicalDevice& physicalDevice, VDeleter<VkDevice>& device, uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VDeleter<VkImage>& image, VDeleter<VkDeviceMemory>& imageMemory);
 	void createImageView(VDeleter<VkDevice>& device, VkImage image, VkFormat format, VkImageAspectFlags aspectFlags, VDeleter<VkImageView>& imageView);
 
-
+	void transitionImageLayout(VDeleter<VkDevice>& device, VDeleter<VkCommandPool>& commandPool, VkQueue& queue, VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
 	VkCommandBuffer beginSingleTimeCommands(VDeleter<VkDevice>& device, VDeleter<VkCommandPool>& commandPool);
 	void endSingleTimeCommands(VkCommandBuffer commandBuffer, VDeleter<VkDevice>& device, VDeleter<VkCommandPool>& commandPool, VkQueue& queue);
 

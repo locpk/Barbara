@@ -36,21 +36,11 @@ private:
 	void createCommandBuffers();
 	void createSemaphores();
 	void createDepthResources();
-	void createTextureImage();
-	void createTextureImageView();
 	void createTextureSampler();
 
 
 
 	void InitUniformBuffer();
-	void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
-
-	
-
-
-
-
-
 	void setupDebugCallback();
 
 
@@ -88,11 +78,6 @@ private:
 	std::unique_ptr<Mesh> testMesh;
 
 
-
-
-	VDeleter<VkImage> textureImage{ device, vkDestroyImage };
-	VDeleter<VkDeviceMemory> textureImageMemory{ device, vkFreeMemory };
-	VDeleter<VkImageView> textureImageView{ device, vkDestroyImageView };
 	VDeleter<VkSampler> textureSampler{ device, vkDestroySampler };
 
 
