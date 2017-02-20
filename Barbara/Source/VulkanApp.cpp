@@ -192,7 +192,7 @@ void VulkanApp::createDescriptorSet()
 	bufferInfo.range = sizeof(UniformBuffer);
 	VkDescriptorImageInfo imageInfo = {};
 	imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-	imageInfo.imageView = testMesh->GetTextureViews()[0];
+	imageInfo.imageView = testMesh->GetFirstMaterialTextureViews()[0];
 	imageInfo.sampler = textureSampler;
 
 	std::array<VkWriteDescriptorSet, 2> descriptorWrites = {};
@@ -719,15 +719,15 @@ void VulkanApp::createCommandBuffers()
 		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
 
 
-		VkBuffer vertexBuffers[] = { testMesh->GetBuffer() };
+		VkBuffer vertexBuffers[] = { testMesh->GetFirstMeshBuffer() };
 		VkDeviceSize offsets[] = { 0 };
 		vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
-		vkCmdBindIndexBuffer(commandBuffer, testMesh->GetBuffer(), sizeof(testMesh->GetVertices()[0]) * testMesh->GetVertices().size(), VK_INDEX_TYPE_UINT32);
+		vkCmdBindIndexBuffer(commandBuffer, testMesh->GetFirstMeshBuffer(), sizeof(Vertex) * testMesh->GetFirstMeshVertices().size(), VK_INDEX_TYPE_UINT32);
 
 		//Binding resources
 		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSet, 0, nullptr);
 
-		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(testMesh->GetIndices().size()), 1, 0, 0, 0);
+		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(testMesh->GetFirstMeshIndices().size()), 1, 0, 0, 0);
 		vkCmdEndRenderPass(commandBuffer);
 
 		if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS)
@@ -754,8 +754,7 @@ void VulkanApp::createSemaphores()
 
 void VulkanApp::loadModel()
 {
-	testMesh.reset(new Mesh(device, "head"));
-	testMesh->LoadMesh(physicalDevice, transferCommandPool, transferQueue);
+	testMesh.reset(new Model(device, physicalDevice,transferCommandPool,transferQueue,std::forward<std::string>("CESAR.obj")));
 }
 
 

@@ -1,10 +1,7 @@
 #pragma once
 #include "vkUtility.h"
 using namespace VkUtilities;
-#include "Mesh.h"
-
-
-
+#include"Model.h"
 
 
 class VulkanApp
@@ -75,7 +72,7 @@ private:
 	VDeleter<VkDeviceMemory> depthImageMemory{ device, vkFreeMemory };
 	VDeleter<VkImageView> depthImageView{ device, vkDestroyImageView };
 
-	std::unique_ptr<Mesh> testMesh;
+	std::unique_ptr<Model> testMesh;
 
 
 	VDeleter<VkSampler> textureSampler{ device, vkDestroySampler };
