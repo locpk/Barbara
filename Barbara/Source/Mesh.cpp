@@ -8,9 +8,21 @@ Mesh::Mesh(VDeleter<VkDevice>& _device, std::string _meshName) : meshName(_meshN
 
 }
 
+Mesh::Mesh(Mesh&& other) : device(other.device), meshName(other.meshName)
+{
+
+	vertices = std::move(other.vertices);
+	indices = std::move(other.indices);
+	viBuffer = other.viBuffer;
+	viBufferMemory = other.viBufferMemory;
+
+	other.viBuffer.reset();
+	other.viBufferMemory.reset();
+
+}
 
 
-void Mesh::LoadMesh( tinyobj::attrib_t& attrib, tinyobj::shape_t& shape)
+void Mesh::LoadMesh(tinyobj::attrib_t& attrib, tinyobj::shape_t& shape)
 {
 
 	std::unordered_map<Vertex, int> uniqueVertices = {};

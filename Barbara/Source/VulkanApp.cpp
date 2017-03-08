@@ -53,7 +53,7 @@ void  VulkanApp::createSwapChain()
 	createInfo.imageArrayLayers = 1;
 	createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-	QueueFamilyIndices queueIndices = findQueueFamilies(physicalDevice, surface);
+	QueueFamilyIndices queueIndices = findQueueFamilies(physicalDevice,  surface);
 
 	if (queueIndices.graphicsFamily != queueIndices.presentFamily)
 	{
@@ -79,7 +79,7 @@ void  VulkanApp::createSwapChain()
 	{
 		throw std::runtime_error("failed to create swap chain!");
 	}
-	swapChain = std::move(newSwapChain);
+	swapChain = newSwapChain;
 
 	vkGetSwapchainImagesKHR(device, swapChain, &imageCount, nullptr);
 	swapChainImages.resize(imageCount);

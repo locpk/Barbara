@@ -15,7 +15,7 @@ private:
 	std::vector<uint32_t> indices;
 
 
-	int indexBufferOffset;
+	//int indexBufferOffset;
 	VDeleter<VkBuffer> viBuffer{ device, vkDestroyBuffer };
 	VDeleter<VkDeviceMemory> viBufferMemory{ device, vkFreeMemory };
 private:
@@ -25,6 +25,7 @@ public:
 	Mesh(VDeleter<VkDevice>& _device, std::string _meshName = "CESAR");
 	~Mesh();
 
+	Mesh(Mesh&& other);
 
 	void LoadMesh( tinyobj::attrib_t& attrib, tinyobj::shape_t& shape);
 	void CreateMeshBuffer(VkPhysicalDevice& physicalDevice, VDeleter<VkCommandPool>& commandPool, VkQueue& queue);

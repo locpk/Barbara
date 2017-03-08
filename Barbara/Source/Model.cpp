@@ -18,23 +18,25 @@ Model::Model(VDeleter<VkDevice>& _device, VkPhysicalDevice& physicalDevice, VDel
 	}
 
 	//Meshes
+	meshes.reserve(shapes.size());
 	for (auto& shape : shapes)
 	{
 		Mesh newMesh{ _device,shape.name };
 		newMesh.LoadMesh(attrib, shape);
-		meshes.push_back(std::move(newMesh));
+		newMesh.CreateMeshBuffer(physicalDevice, commandPool, queue);
+		meshes.emplace_back(std::move(newMesh));
 	}
 	for (auto& mesh : meshes)
 	{
-		mesh.CreateMeshBuffer(physicalDevice, commandPool, queue);
+		//mesh.CreateMeshBuffer(physicalDevice, commandPool, queue);
 	}
 
 	//Materials
+	materials.reserve(mats.size());
 	for (auto& material : mats)
 	{
 		Material newMaterial{ _device,material.name };
-		//newMaterial.LoadTexture(physicalDevice, commandPool, queue, material.diffuse_texname, Material::DIFFUSE);
-		materials.push_back(std::move(newMaterial));
+		materials.emplace_back(std::move(newMaterial));
 		materials[materials.size() - 1].LoadTexture(physicalDevice, commandPool, queue, material.diffuse_texname, Material::DIFFUSE);
 	}
 

@@ -1,3 +1,4 @@
+#include <vld.h>
 #include "VulkanApp.h"
 
 int main()
