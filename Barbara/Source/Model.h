@@ -3,8 +3,8 @@
 
 class Mesh;
 class Material;
-static const std::string MESH_FOLDER { "Source/models/" };
-static const std::string MATERIAL_FOLDER { "Source/materials/" };
+static const std::string MESH_FOLDER{ "Source/models/" };
+static const std::string MATERIAL_FOLDER{ "Source/materials/" };
 class Model
 {
 private:
@@ -16,9 +16,17 @@ public:
 	Model(VDeleter<VkDevice>& _device, VkPhysicalDevice& physicalDevice, VDeleter<VkCommandPool>& commandPool, VkQueue& queue, std::string _modelName);
 	~Model();
 
-	const VDeleter<VkBuffer>& GetFirstMeshBuffer() const;
-	const std::vector<Vertex>& GetFirstMeshVertices() const;
-	const std::vector<uint32_t>& GetFirstMeshIndices() const;
+
+	size_t GetMeshCount() const;
+
+	size_t GetMaterialCount() const;
+
+	size_t GetMeshVerticesCount(size_t index) const;
+	size_t GetMeshIndicesCount(size_t index) const;
+
+	const VDeleter<VkBuffer>& GetMeshBuffer(size_t index) const;
+	const std::vector<VDeleter<VkImageView>>& GetMaterials(size_t index) const;
+
 	const std::vector<VDeleter<VkImageView>>& GetFirstMaterialTextureViews() const;
 };
 

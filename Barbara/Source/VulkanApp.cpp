@@ -718,16 +718,30 @@ void VulkanApp::createCommandBuffers()
 		vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
 
+		for (size_t i = 0; i < testMesh->GetMeshCount(); i++)
+		{
+			
+			VkBuffer vertexBuffers[] = { testMesh->GetMeshBuffer(i) };
+			VkDeviceSize offsets[] = { 0 };
+			vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+			vkCmdBindIndexBuffer(commandBuffer, testMesh->GetMeshBuffer(i), sizeof(Vertex) * testMesh->GetMeshVerticesCount(i), VK_INDEX_TYPE_UINT32);
 
-		VkBuffer vertexBuffers[] = { testMesh->GetFirstMeshBuffer() };
-		VkDeviceSize offsets[] = { 0 };
-		vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
-		vkCmdBindIndexBuffer(commandBuffer, testMesh->GetFirstMeshBuffer(), sizeof(Vertex) * testMesh->GetFirstMeshVertices().size(), VK_INDEX_TYPE_UINT32);
+			//Binding resources
+			vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSet, 0, nullptr);
 
-		//Binding resources
-		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSet, 0, nullptr);
+			vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(testMesh->GetMeshIndicesCount(i)), 1, 0, 0, 0);
+		}
+		//VkBuffer vertexBuffers[] = { testMesh->GetFirstMeshBuffer() };
+		//VkDeviceSize offsets[] = { 0 };
+		//vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+		//vkCmdBindIndexBuffer(commandBuffer, testMesh->GetFirstMeshBuffer(), sizeof(Vertex) * testMesh->GetFirstMeshVertices().size(), VK_INDEX_TYPE_UINT32);
 
-		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(testMesh->GetFirstMeshIndices().size()), 1, 0, 0, 0);
+		////Binding resources
+		//vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSet, 0, nullptr);
+
+		//vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(testMesh->GetFirstMeshIndices().size()), 1, 0, 0, 0);
+
+
 		vkCmdEndRenderPass(commandBuffer);
 
 		if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS)
@@ -754,7 +768,7 @@ void VulkanApp::createSemaphores()
 
 void VulkanApp::loadModel()
 {
-	testMesh.reset(new Model(device, physicalDevice,transferCommandPool,transferQueue,std::forward<std::string>("CESAR.obj")));
+	testMesh.reset(new Model(device, physicalDevice,transferCommandPool,transferQueue,std::forward<std::string>("head.obj")));
 }
 
 
@@ -831,7 +845,7 @@ void VulkanApp::update()
 	uniformBufferObj.model = glm::rotate(glm::mat4(), glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 	uniformBufferObj.model = glm::rotate(uniformBufferObj.model, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 	uniformBufferObj.model = glm::rotate(glm::mat4(), timeSinceStart * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f)) * uniformBufferObj.model;
-	uniformBufferObj.model = glm::scale(uniformBufferObj.model, glm::vec3(0.1f, 0.1f, 0.1f));
+	//uniformBufferObj.model = glm::scale(uniformBufferObj.model, glm::vec3(0.1f, 0.1f, 0.1f));
 	uniformBufferObj.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 	uniformBufferObj.proj = glm::perspective(glm::radians(40.0f), swapChainExtent.width / (float)swapChainExtent.height, 0.1f, 10.0f);
 	uniformBufferObj.proj[1][1] *= -1;

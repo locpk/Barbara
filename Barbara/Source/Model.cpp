@@ -26,10 +26,6 @@ Model::Model(VDeleter<VkDevice>& _device, VkPhysicalDevice& physicalDevice, VDel
 		newMesh.CreateMeshBuffer(physicalDevice, commandPool, queue);
 		meshes.emplace_back(std::move(newMesh));
 	}
-	for (auto& mesh : meshes)
-	{
-		//mesh.CreateMeshBuffer(physicalDevice, commandPool, queue);
-	}
 
 	//Materials
 	materials.reserve(mats.size());
@@ -49,18 +45,39 @@ Model::~Model()
 }
 
 
-const VDeleter<VkBuffer>& Model::GetFirstMeshBuffer() const
+
+
+size_t Model::GetMeshCount() const
 {
-	return meshes[0].GetBuffer();
+	return meshes.size();
 }
-const std::vector<Vertex>& Model::GetFirstMeshVertices() const
+
+size_t Model::GetMaterialCount() const
 {
-	return meshes[0].GetVertices();
+	return materials.size();
 }
-const std::vector<uint32_t>& Model::GetFirstMeshIndices() const
+
+
+const VDeleter<VkBuffer>& Model::GetMeshBuffer(size_t index) const
 {
-	return meshes[0].GetIndices();
+	return meshes[index].GetBuffer();
+};
+
+const std::vector<VDeleter<VkImageView>>& Model::GetMaterials(size_t index) const
+{
+	return materials[index].GetTextureViews();
+};
+
+size_t Model::GetMeshVerticesCount(size_t index) const
+{
+	return meshes[index].GetVertices().size();
 }
+
+size_t Model::GetMeshIndicesCount(size_t index) const
+{
+	return meshes[index].GetIndices().size();
+}
+
 
 const std::vector<VDeleter<VkImageView>>& Model::GetFirstMaterialTextureViews() const
 {
