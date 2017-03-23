@@ -9,8 +9,8 @@ public:
 		DIFFUSE = 0, MAX_COUNT
 	};
 private:
-	const std::string matName;
 	VDeleter<VkDevice>& device;
+	const std::string matName;
 
 	std::vector<VDeleter<VkImage>> textures;
 	std::vector<VDeleter<VkDeviceMemory>> textureImageMemories;

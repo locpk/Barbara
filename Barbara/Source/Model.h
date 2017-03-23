@@ -3,11 +3,12 @@
 
 class Mesh;
 class Material;
-static const std::string MESH_FOLDER{ "Source/models/" };
-static const std::string MATERIAL_FOLDER{ "Source/materials/" };
+
 class Model
 {
 private:
+	static constexpr char MESH_FOLDER[] = "Source/models/" ;
+	static constexpr char MATERIAL_FOLDER[] =  "Source/materials/" ;
 	const std::string modelName;
 
 	std::vector<Mesh> meshes;

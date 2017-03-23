@@ -8,8 +8,8 @@ private:
 	static VDeleter<VkBuffer> s_indexBuffer; //Shared index buffer
 	static VDeleter<VkDeviceMemory> s_indexBufferMemory;
 private:
-	const std::string meshName;
 	VDeleter<VkDevice>& device;
+	const std::string meshName;
 
 	std::vector<Vertex> vertices;
 	std::vector<uint32_t> indices;
@@ -35,8 +35,6 @@ public:
 	{
 		return viBuffer;
 	}
-
-
 
 	inline const std::string& GetMeshPath() const
 	{

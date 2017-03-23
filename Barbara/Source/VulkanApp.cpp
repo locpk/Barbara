@@ -9,7 +9,14 @@ struct UniformBuffer
 	glm::mat4 proj;
 };
 
-
+double mousePosX { 0.0f };
+double mousePosY { 0.0f };
+glm::vec3 rotation = glm::vec3();
+// Use to adjust mouse rotation speed
+float rotationSpeed = 1.0f;
+// Use to adjust mouse zoom speed
+float zoomSpeed = 5.0f;
+float zoom{ 0.0f };
 
 
 static void onWindowResized(GLFWwindow* window, int width, int height)
@@ -18,6 +25,7 @@ static void onWindowResized(GLFWwindow* window, int width, int height)
 
 	VulkanApp* app = reinterpret_cast<VulkanApp*>(glfwGetWindowUserPointer(window));
 	app->recreateSwapChain();
+
 }
 
 
@@ -53,7 +61,7 @@ void  VulkanApp::createSwapChain()
 	createInfo.imageArrayLayers = 1;
 	createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-	QueueFamilyIndices queueIndices = findQueueFamilies(physicalDevice,  surface);
+	QueueFamilyIndices queueIndices = findQueueFamilies(physicalDevice, surface);
 
 	if (queueIndices.graphicsFamily != queueIndices.presentFamily)
 	{
@@ -480,6 +488,7 @@ void VulkanApp::createFramebuffers()
 			swapChainImageViews[i],
 			depthImageView
 		};
+
 		VkFramebufferCreateInfo framebufferInfo = {};
 		framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
 		framebufferInfo.renderPass = renderPass;
@@ -493,6 +502,7 @@ void VulkanApp::createFramebuffers()
 		{
 			throw std::runtime_error("failed to create framebuffer!");
 		}
+
 	}
 }
 
@@ -516,6 +526,9 @@ void VulkanApp::initWindow()
 	window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);
 	glfwSetWindowUserPointer(window, this);
 	glfwSetWindowSizeCallback(window, onWindowResized);
+	glfwSetCursorPosCallback(window, [](GLFWwindow* window, double xpos, double ypos) {mousePosX = xpos; mousePosY = ypos; });
+
+
 }
 
 
@@ -720,7 +733,7 @@ void VulkanApp::createCommandBuffers()
 
 		for (size_t i = 0; i < testMesh->GetMeshCount(); i++)
 		{
-			
+
 			VkBuffer vertexBuffers[] = { testMesh->GetMeshBuffer(i) };
 			VkDeviceSize offsets[] = { 0 };
 			vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
@@ -768,7 +781,7 @@ void VulkanApp::createSemaphores()
 
 void VulkanApp::loadModel()
 {
-	testMesh.reset(new Model(device, physicalDevice,transferCommandPool,transferQueue,std::forward<std::string>("head.obj")));
+	testMesh.reset(new Model(device, physicalDevice, transferCommandPool, transferQueue, std::forward<std::string>("CESAR.obj")));
 }
 
 
@@ -819,6 +832,15 @@ void VulkanApp::initVulkan()
 	createDescriptorSet();
 	createCommandBuffers();
 	createSemaphores();
+
+
+	//Setup camera
+	camera.type = Camera::CameraType::firstperson;
+	camera.movementSpeed = 5.0f;
+	camera.position = { 2.15f, 0.3f, -8.75f };
+	camera.setRotation(glm::vec3(-0.75f, 12.5f, 0.0f));
+	camera.setPerspective(60.0f, (float)swapChainExtent.width / (float)swapChainExtent.height, 0.1f, 256.0f);
+
 }
 
 void VulkanApp::mainLoop()
@@ -846,8 +868,12 @@ void VulkanApp::update()
 	uniformBufferObj.model = glm::rotate(uniformBufferObj.model, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 	uniformBufferObj.model = glm::rotate(glm::mat4(), timeSinceStart * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f)) * uniformBufferObj.model;
 	//uniformBufferObj.model = glm::scale(uniformBufferObj.model, glm::vec3(0.1f, 0.1f, 0.1f));
-	uniformBufferObj.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+	/*uniformBufferObj.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 	uniformBufferObj.proj = glm::perspective(glm::radians(40.0f), swapChainExtent.width / (float)swapChainExtent.height, 0.1f, 10.0f);
+	uniformBufferObj.proj[1][1] *= -1;*/
+
+	uniformBufferObj.view = camera.matrices.view;
+	uniformBufferObj.proj = camera.matrices.perspective;
 	uniformBufferObj.proj[1][1] *= -1;
 
 	void* data;
@@ -856,6 +882,72 @@ void VulkanApp::update()
 	vkUnmapMemory(device, uniformStagingBufferMemory);
 
 	copyBuffer(device, transferCommandPool, transferQueue, uniformStagingBuffer, uniformBuffer, sizeof(uniformBufferObj));
+
+	auto tEnd = std::chrono::high_resolution_clock::now();
+	auto tDiff = std::chrono::duration<double, std::milli>(tEnd - currentTime).count();
+	float frameTimer = (float)tDiff / 1000.0f;
+
+
+	if (GLFW_PRESS == glfwGetKey(window, GLFW_KEY_W))
+	{
+		camera.keys.up = true;
+	}
+	if (GLFW_RELEASE == glfwGetKey(window, GLFW_KEY_W))
+	{
+		camera.keys.up = false;
+	}
+	if (GLFW_PRESS == glfwGetKey(window, GLFW_KEY_A))
+	{
+		camera.keys.left = true;
+	}
+	if (GLFW_RELEASE == glfwGetKey(window, GLFW_KEY_A))
+	{
+		camera.keys.left = false;
+	}
+	if (GLFW_PRESS == glfwGetKey(window, GLFW_KEY_S))
+	{
+		camera.keys.down = true;
+	}
+	if (GLFW_RELEASE == glfwGetKey(window, GLFW_KEY_S))
+	{
+		camera.keys.down = false;
+	}
+	if (GLFW_PRESS == glfwGetKey(window, GLFW_KEY_D))
+	{
+		camera.keys.right = true;
+	}
+	if (GLFW_RELEASE == glfwGetKey(window, GLFW_KEY_D))
+	{
+		camera.keys.right = false;
+	}
+
+	if (GLFW_PRESS == glfwGetMouseButton(window,GLFW_MOUSE_BUTTON_2))
+	{
+		double posx, posy ;
+		glfwGetCursorPos(window, &posx, &posy);
+		zoom += (static_cast<float>(mousePosY) - (float)posy) * .005f * zoomSpeed;
+		camera.translate(glm::vec3(-0.0f, 0.0f, (static_cast<float>(mousePosY) - (float)posy) * .005f * zoomSpeed));
+		mousePosX = posx;
+		mousePosY = posy;
+	}
+
+	if (GLFW_PRESS == glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1))
+	{
+		double posx, posy;
+		glfwGetCursorPos(window, &posx, &posy);
+		rotation.x += (static_cast<float>(mousePosY) - (float)posy) * 1.25f * rotationSpeed;
+		rotation.y -= (static_cast<float>(mousePosX) - (float)posx) * 1.25f * rotationSpeed;
+		camera.rotate(glm::vec3((static_cast<float>(mousePosY) - (float)posy) * camera.rotationSpeed, -(static_cast<float>(mousePosX) - (float)posx) * camera.rotationSpeed, 0.0f));
+		mousePosX = posx;
+		mousePosY = posy;
+	}
+
+
+	if (camera.moving())
+	{
+		camera.update(frameTimer);
+	}
+
 }
 
 

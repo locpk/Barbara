@@ -2,6 +2,10 @@
 #include "vkUtility.h"
 using namespace VkUtilities;
 #include"Model.h"
+#include "camera.hpp"
+
+
+
 
 
 class VulkanApp
@@ -72,7 +76,14 @@ private:
 	VDeleter<VkDeviceMemory> depthImageMemory{ device, vkFreeMemory };
 	VDeleter<VkImageView> depthImageView{ device, vkDestroyImageView };
 
+
+	 Camera camera;
 	std::unique_ptr<Model> testMesh;
+
+	//Deferred 
+	std::array<VDeleter<VkImage>, 3> frameBufferObjects;
+	std::array<VDeleter<VkDeviceMemory>, 3> FOBMemories;
+	std::array<VDeleter<VkImageView>, 3> FOBViews;
 
 
 	VDeleter<VkSampler> textureSampler{ device, vkDestroySampler };
