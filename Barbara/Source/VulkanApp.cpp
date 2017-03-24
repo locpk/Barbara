@@ -9,8 +9,8 @@ struct UniformBuffer
 	glm::mat4 proj;
 };
 
-double mousePosX { 0.0f };
-double mousePosY { 0.0f };
+double mousePosX{ 0.0f };
+double mousePosY{ 0.0f };
 glm::vec3 rotation = glm::vec3();
 // Use to adjust mouse rotation speed
 float rotationSpeed = 1.0f;
@@ -781,7 +781,7 @@ void VulkanApp::createSemaphores()
 
 void VulkanApp::loadModel()
 {
-	testMesh.reset(new Model(device, physicalDevice, transferCommandPool, transferQueue, std::forward<std::string>("CESAR.obj")));
+	testMesh.reset(new Model(device, physicalDevice, transferCommandPool, transferQueue, std::forward<std::string>("head.obj")));
 }
 
 
@@ -841,6 +841,11 @@ void VulkanApp::initVulkan()
 	camera.setRotation(glm::vec3(-0.75f, 12.5f, 0.0f));
 	camera.setPerspective(60.0f, (float)swapChainExtent.width / (float)swapChainExtent.height, 0.1f, 256.0f);
 
+	sCamera.EnableMove();
+	sCamera.SetPosition(0.0f, 1.0f, -50.0f);
+	sCamera.SetLens(glm::quarter_pi<float>(), (float)swapChainExtent.width / (float)swapChainExtent.height, 0.1f, 256.0f);
+	sCamera.LookAt(sCamera.GetPosition(), { 0.0f,0.0f,0.0f }, { 0.0f,1.0f,0.0f });
+
 }
 
 void VulkanApp::mainLoop()
@@ -864,16 +869,24 @@ void VulkanApp::update()
 
 
 	UniformBuffer uniformBufferObj = {};
-	uniformBufferObj.model = glm::rotate(glm::mat4(), glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+	uniformBufferObj.model = glm::mat4();
+	/*uniformBufferObj.model = glm::rotate(glm::mat4(), glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 	uniformBufferObj.model = glm::rotate(uniformBufferObj.model, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-	uniformBufferObj.model = glm::rotate(glm::mat4(), timeSinceStart * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f)) * uniformBufferObj.model;
+	uniformBufferObj.model = glm::rotate(glm::mat4(), timeSinceStart * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f)) * uniformBufferObj.model;*/
 	//uniformBufferObj.model = glm::scale(uniformBufferObj.model, glm::vec3(0.1f, 0.1f, 0.1f));
 	/*uniformBufferObj.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 	uniformBufferObj.proj = glm::perspective(glm::radians(40.0f), swapChainExtent.width / (float)swapChainExtent.height, 0.1f, 10.0f);
 	uniformBufferObj.proj[1][1] *= -1;*/
 
-	uniformBufferObj.view = camera.matrices.view;
-	uniformBufferObj.proj = camera.matrices.perspective;
+	/*uniformBufferObj.view = camera.matrices.view;
+	uniformBufferObj.proj = camera.matrices.perspective;*/
+
+	//uniformBufferObj.view = glm::lookAt(sCamera.GetPosition(), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+
+
+	uniformBufferObj.view = sCamera.GetView();
+	sCamera.UpdateView();
+	uniformBufferObj.proj = sCamera.GetProj();
 	uniformBufferObj.proj[1][1] *= -1;
 
 	void* data;
@@ -921,9 +934,9 @@ void VulkanApp::update()
 		camera.keys.right = false;
 	}
 
-	if (GLFW_PRESS == glfwGetMouseButton(window,GLFW_MOUSE_BUTTON_2))
+	if (GLFW_PRESS == glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_2))
 	{
-		double posx, posy ;
+		double posx, posy;
 		glfwGetCursorPos(window, &posx, &posy);
 		zoom += (static_cast<float>(mousePosY) - (float)posy) * .005f * zoomSpeed;
 		camera.translate(glm::vec3(-0.0f, 0.0f, (static_cast<float>(mousePosY) - (float)posy) * .005f * zoomSpeed));
@@ -948,6 +961,7 @@ void VulkanApp::update()
 		camera.update(frameTimer);
 	}
 
+	
 }
 
 
