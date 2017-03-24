@@ -110,9 +110,9 @@ public:
 		auto mat = glm::lookAt(_pos, _target, up);
 
 		position = _pos;
-		right = mat[0];
-		up = mat[1];
-		look = mat[2];
+		look = glm::vec3(mat[0][2], mat[1][2], mat[2][2]);
+		up = glm::vec3(mat[0][1], mat[1][1], mat[2][1]);
+		right = glm::vec3(mat[0][0], mat[1][0], mat[2][0]);
 
 
 		viewDirty = true;
@@ -167,8 +167,7 @@ public:
 	{
 		if (moveable)
 		{
-			up = glm::rotate(up, angle, right);
-			look = glm::rotate(look, angle, right);
+			pitch = angle;
 			viewDirty = true;
 		}
 	}
@@ -177,10 +176,7 @@ public:
 	{
 		if (moveable)
 		{
-			glm::vec3 worldY{ 0.0f,1.0f,0.0f };
-			right = glm::rotate(right, angle, worldY);
-			up = glm::rotate(up, angle, worldY);
-			look = glm::rotate(look, angle, worldY);
+			yaw = angle;
 			viewDirty = true;
 		}
 	}
@@ -189,28 +185,29 @@ public:
 	{
 		if (viewDirty)
 		{
-			view = glm::lookAt(position, position + look, up);
 
-			right = glm::normalize(view[0]);
-			up = glm::normalize(view[1]);
-			look = glm::normalize(view[2]);
+			glm::quat key_quat = glm::quat(glm::vec3(pitch, yaw, roll));
+			//reset values
+			pitch = yaw = roll = 0.0f;
+
+			//order matters,update camera_quat
+			camera_quat = key_quat * camera_quat;
+			camera_quat = glm::normalize(camera_quat);
+			glm::mat4 rotate = glm::mat4_cast(camera_quat);
+
+			auto translate = glm::translate(glm::mat4(), -position);
+			view = rotate * translate;
+
+			look = glm::vec3(view[0][2], view[1][2], view[2][2]);
+			up = glm::vec3(view[0][1], view[1][1], view[2][1]);
+			right = glm::vec3(view[0][0], view[1][0], view[2][0]);
+
 
 			viewDirty = false;
 		}
 	}
 
-	void OnKeyPressed(GLFWwindow* window, int key, int scancode, int action, int mode)
-	{
-			float cameraSpeed = 0.05f;
-		if (key == GLFW_KEY_W)
-			position += cameraSpeed * look;
-		if (key == GLFW_KEY_S)
-			position -= cameraSpeed * look;
-		if (key == GLFW_KEY_A)
-			position -= right * cameraSpeed;
-		if (key == GLFW_KEY_D)
-			position += right * cameraSpeed;
-	}
+
 private:
 
 	glm::vec3	position{ 0.0f,0.0f,0.0f };
@@ -224,6 +221,11 @@ private:
 	float		fovY{ 0.0f };
 	float		nearWindowHeight{ 0.0f };
 	float		farWindowHeight{ 0.0f };
+
+	glm::quat	camera_quat = glm::quat(1.0f,0.0f,0.0f,0.0f);
+	float		pitch{ 0.0f }; 
+	float		yaw{ 0.0f };
+	float		roll{ 0.0f };
 
 	bool moveable{ true };
 	bool viewDirty{ true };

@@ -9,14 +9,9 @@ struct UniformBuffer
 	glm::mat4 proj;
 };
 
-double mousePosX{ 0.0f };
-double mousePosY{ 0.0f };
-glm::vec3 rotation = glm::vec3();
-// Use to adjust mouse rotation speed
-float rotationSpeed = 1.0f;
-// Use to adjust mouse zoom speed
-float zoomSpeed = 5.0f;
-float zoom{ 0.0f };
+glm::vec2 mousePos{};
+
+
 
 
 static void onWindowResized(GLFWwindow* window, int width, int height)
@@ -526,7 +521,7 @@ void VulkanApp::initWindow()
 	window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);
 	glfwSetWindowUserPointer(window, this);
 	glfwSetWindowSizeCallback(window, onWindowResized);
-	glfwSetCursorPosCallback(window, [](GLFWwindow* window, double xpos, double ypos) {mousePosX = xpos; mousePosY = ypos; });
+	glfwSetCursorPosCallback(window, [](GLFWwindow* window, double xpos, double ypos) {mousePos.x = static_cast<float>(xpos); mousePos.y = static_cast<float>(ypos); });
 
 
 }
@@ -906,6 +901,15 @@ void VulkanApp::update()
 	{
 		double posx, posy;
 		glfwGetCursorPos(window, &posx, &posy);
+		glm::vec2 mouse_delta = mousePos - glm::vec2(posx, posy);
+
+		const float mouseX_Sensitivity = 0.0020f;
+		const float mouseY_Sensitivity = 0.0020f;
+
+		sCamera.Yaw(mouseX_Sensitivity * mouse_delta.x);
+		sCamera.Pitch(mouseY_Sensitivity * mouse_delta.y);
+
+		mousePos = glm::vec2(posx, posy);
 	}
 
 	if (GLFW_PRESS == glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1))
