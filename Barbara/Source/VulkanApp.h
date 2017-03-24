@@ -2,7 +2,6 @@
 #include "vkUtility.h"
 using namespace VkUtilities;
 #include"Model.h"
-#include "camera.hpp"
 #include "SimpleCamera.hpp"
 
 
@@ -78,7 +77,6 @@ private:
 	VDeleter<VkImageView> depthImageView{ device, vkDestroyImageView };
 
 
-	Camera camera;
 	SimpleCamera sCamera;
 	std::unique_ptr<Model> testMesh;
 

@@ -193,7 +193,6 @@
     <ClCompile Include="Source\VulkanApp.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Source\camera.hpp" />
     <ClInclude Include="Source\Material.h" />
     <ClInclude Include="Source\Mesh.h" />
     <ClInclude Include="Source\Model.h" />

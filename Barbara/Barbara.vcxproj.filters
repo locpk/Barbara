@@ -68,9 +68,6 @@
     <ClInclude Include="Source\Material.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\camera.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Source\SimpleCamera.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>

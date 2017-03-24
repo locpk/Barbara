@@ -1,11 +1,6 @@
 #pragma once
 
-#define GLM_FORCE_RADIANS
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
-#include <glm/glm.hpp>
-#include <glm/gtc/quaternion.hpp>
-#include <glm/gtx/rotate_vector.hpp>
-#include <glm/gtc/matrix_transform.hpp>
+#include "SharedDefine.h"
 
 class SimpleCamera
 {
@@ -112,7 +107,7 @@ public:
 
 	void LookAt(glm::vec3 _pos, glm::vec3 _target, glm::vec3 _worldUp)
 	{
-		auto mat = glm::lookAtLH(_pos, _target, up);
+		auto mat = glm::lookAt(_pos, _target, up);
 
 		position = _pos;
 		right = mat[0];
@@ -195,12 +190,26 @@ public:
 		if (viewDirty)
 		{
 			view = glm::lookAt(position, position + look, up);
-			right = view[0];
-			up = view[1];
-			look = view[2];
+
+			right = glm::normalize(view[0]);
+			up = glm::normalize(view[1]);
+			look = glm::normalize(view[2]);
 
 			viewDirty = false;
 		}
+	}
+
+	void OnKeyPressed(GLFWwindow* window, int key, int scancode, int action, int mode)
+	{
+			float cameraSpeed = 0.05f;
+		if (key == GLFW_KEY_W)
+			position += cameraSpeed * look;
+		if (key == GLFW_KEY_S)
+			position -= cameraSpeed * look;
+		if (key == GLFW_KEY_A)
+			position -= right * cameraSpeed;
+		if (key == GLFW_KEY_D)
+			position += right * cameraSpeed;
 	}
 private:
 

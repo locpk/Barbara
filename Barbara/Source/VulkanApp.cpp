@@ -321,7 +321,7 @@ void VulkanApp::createGraphicsPipeline()
 	rasterizer.rasterizerDiscardEnable = VK_FALSE;
 	rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
 	rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
-	rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+	rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
 	rasterizer.depthBiasEnable = VK_FALSE;
 	rasterizer.lineWidth = 1.0f;
 
@@ -834,17 +834,12 @@ void VulkanApp::initVulkan()
 	createSemaphores();
 
 
-	//Setup camera
-	camera.type = Camera::CameraType::firstperson;
-	camera.movementSpeed = 5.0f;
-	camera.position = { 2.15f, 0.3f, -8.75f };
-	camera.setRotation(glm::vec3(-0.75f, 12.5f, 0.0f));
-	camera.setPerspective(60.0f, (float)swapChainExtent.width / (float)swapChainExtent.height, 0.1f, 256.0f);
+
 
 	sCamera.EnableMove();
 	sCamera.SetPosition(0.0f, 1.0f, -50.0f);
 	sCamera.SetLens(glm::quarter_pi<float>(), (float)swapChainExtent.width / (float)swapChainExtent.height, 0.1f, 256.0f);
-	sCamera.LookAt(sCamera.GetPosition(), { 0.0f,0.0f,0.0f }, { 0.0f,1.0f,0.0f });
+
 
 }
 
@@ -863,105 +858,67 @@ void VulkanApp::mainLoop()
 void VulkanApp::update()
 {
 	static auto startTime = std::chrono::high_resolution_clock::now();
-
+	static auto lastFrameTime = std::chrono::high_resolution_clock::now();
 	auto currentTime = std::chrono::high_resolution_clock::now();
 	float timeSinceStart = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - startTime).count() / 1000.0f;
+	float dt = std::chrono::duration<float, std::milli>(currentTime - lastFrameTime).count() / 1000.0f;
 
 
 	UniformBuffer uniformBufferObj = {};
 	uniformBufferObj.model = glm::mat4();
 	/*uniformBufferObj.model = glm::rotate(glm::mat4(), glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-	uniformBufferObj.model = glm::rotate(uniformBufferObj.model, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-	uniformBufferObj.model = glm::rotate(glm::mat4(), timeSinceStart * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f)) * uniformBufferObj.model;*/
-	//uniformBufferObj.model = glm::scale(uniformBufferObj.model, glm::vec3(0.1f, 0.1f, 0.1f));
-	/*uniformBufferObj.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-	uniformBufferObj.proj = glm::perspective(glm::radians(40.0f), swapChainExtent.width / (float)swapChainExtent.height, 0.1f, 10.0f);
-	uniformBufferObj.proj[1][1] *= -1;*/
-
-	/*uniformBufferObj.view = camera.matrices.view;
-	uniformBufferObj.proj = camera.matrices.perspective;*/
-
-	//uniformBufferObj.view = glm::lookAt(sCamera.GetPosition(), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-
-
+	uniformBufferObj.model = glm::rotate(uniformBufferObj.model, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));*/
+	uniformBufferObj.model = glm::rotate(glm::mat4(), timeSinceStart * glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f)) * uniformBufferObj.model;
+	/*uniformBufferObj.model = glm::scale(uniformBufferObj.model, glm::vec3(0.1f, 0.1f, 0.1f));*/
 	uniformBufferObj.view = sCamera.GetView();
-	sCamera.UpdateView();
 	uniformBufferObj.proj = sCamera.GetProj();
 	uniformBufferObj.proj[1][1] *= -1;
 
+	//Update uniformBuffer
 	void* data;
 	vkMapMemory(device, uniformStagingBufferMemory, 0, sizeof(uniformBufferObj), 0, &data);
 	memcpy(data, &uniformBufferObj, sizeof(uniformBufferObj));
 	vkUnmapMemory(device, uniformStagingBufferMemory);
-
 	copyBuffer(device, transferCommandPool, transferQueue, uniformStagingBuffer, uniformBuffer, sizeof(uniformBufferObj));
 
-	auto tEnd = std::chrono::high_resolution_clock::now();
-	auto tDiff = std::chrono::duration<double, std::milli>(tEnd - currentTime).count();
-	float frameTimer = (float)tDiff / 1000.0f;
 
 
+	float cameraSpeed = 10.0f * dt;
 	if (GLFW_PRESS == glfwGetKey(window, GLFW_KEY_W))
 	{
-		camera.keys.up = true;
-	}
-	if (GLFW_RELEASE == glfwGetKey(window, GLFW_KEY_W))
-	{
-		camera.keys.up = false;
-	}
-	if (GLFW_PRESS == glfwGetKey(window, GLFW_KEY_A))
-	{
-		camera.keys.left = true;
-	}
-	if (GLFW_RELEASE == glfwGetKey(window, GLFW_KEY_A))
-	{
-		camera.keys.left = false;
+		sCamera.Walk(cameraSpeed);
 	}
 	if (GLFW_PRESS == glfwGetKey(window, GLFW_KEY_S))
 	{
-		camera.keys.down = true;
+		sCamera.Walk(-cameraSpeed);
 	}
-	if (GLFW_RELEASE == glfwGetKey(window, GLFW_KEY_S))
+	if (GLFW_PRESS == glfwGetKey(window, GLFW_KEY_A))
 	{
-		camera.keys.down = false;
+		sCamera.Strafe(-cameraSpeed);
 	}
 	if (GLFW_PRESS == glfwGetKey(window, GLFW_KEY_D))
 	{
-		camera.keys.right = true;
+		sCamera.Strafe(cameraSpeed);
 	}
-	if (GLFW_RELEASE == glfwGetKey(window, GLFW_KEY_D))
-	{
-		camera.keys.right = false;
-	}
+
 
 	if (GLFW_PRESS == glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_2))
 	{
 		double posx, posy;
 		glfwGetCursorPos(window, &posx, &posy);
-		zoom += (static_cast<float>(mousePosY) - (float)posy) * .005f * zoomSpeed;
-		camera.translate(glm::vec3(-0.0f, 0.0f, (static_cast<float>(mousePosY) - (float)posy) * .005f * zoomSpeed));
-		mousePosX = posx;
-		mousePosY = posy;
 	}
 
 	if (GLFW_PRESS == glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1))
 	{
 		double posx, posy;
 		glfwGetCursorPos(window, &posx, &posy);
-		rotation.x += (static_cast<float>(mousePosY) - (float)posy) * 1.25f * rotationSpeed;
-		rotation.y -= (static_cast<float>(mousePosX) - (float)posx) * 1.25f * rotationSpeed;
-		camera.rotate(glm::vec3((static_cast<float>(mousePosY) - (float)posy) * camera.rotationSpeed, -(static_cast<float>(mousePosX) - (float)posx) * camera.rotationSpeed, 0.0f));
-		mousePosX = posx;
-		mousePosY = posy;
+
 	}
 
 
-	if (camera.moving())
-	{
-		camera.update(frameTimer);
-	}
+	sCamera.UpdateView();
 
-	
+	lastFrameTime = currentTime;
 }
 
 
