@@ -167,7 +167,7 @@ public:
 	{
 		if (moveable)
 		{
-			pitch = angle;
+			dPitch = angle;
 			viewDirty = true;
 		}
 	}
@@ -176,7 +176,7 @@ public:
 	{
 		if (moveable)
 		{
-			yaw = angle;
+			dYaw = angle;
 			viewDirty = true;
 		}
 	}
@@ -185,13 +185,12 @@ public:
 	{
 		if (viewDirty)
 		{
-
-			glm::quat key_quat = glm::quat(glm::vec3(pitch, yaw, roll));
-			//reset values
-			pitch = yaw = roll = 0.0f;
+			glm::quat framePitch = glm::angleAxis(dPitch, glm::vec3(1.0f, 0.0f, 0.0f));
+			glm::quat frameYaw = glm::angleAxis(dYaw, glm::vec3(0.0f, 1.0f, 0.0f));
+			dPitch = dYaw = dRoll = 0.0f;
 
 			//order matters,update camera_quat
-			camera_quat = key_quat * camera_quat;
+			camera_quat = framePitch * camera_quat * frameYaw;
 			camera_quat = glm::normalize(camera_quat);
 			glm::mat4 rotate = glm::mat4_cast(camera_quat);
 
@@ -223,9 +222,10 @@ private:
 	float		farWindowHeight{ 0.0f };
 
 	glm::quat	camera_quat = glm::quat(1.0f,0.0f,0.0f,0.0f);
-	float		pitch{ 0.0f }; 
-	float		yaw{ 0.0f };
-	float		roll{ 0.0f };
+	//Delta rotation angles
+	float		dPitch{ 0.0f }; 
+	float		dYaw{ 0.0f };
+	float		dRoll{ 0.0f };
 
 	bool moveable{ true };
 	bool viewDirty{ true };
