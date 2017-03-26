@@ -60,7 +60,9 @@ private:
 	std::vector<VkImage> swapChainImages;
 	std::vector<VDeleter<VkImageView>> swapChainImageViews;
 	VDeleter<VkRenderPass> renderPass{ device, vkDestroyRenderPass };
+	VDeleter<VkDescriptorSetLayout> ubDescriptorSetLayout{ device, vkDestroyDescriptorSetLayout };
 	VDeleter<VkDescriptorSetLayout> descriptorSetLayout{ device, vkDestroyDescriptorSetLayout };
+	VDeleter<VkDescriptorPool> ubDescriptorPool{ device, vkDestroyDescriptorPool };
 	VDeleter<VkDescriptorPool> descriptorPool{ device, vkDestroyDescriptorPool };
 	VDeleter<VkPipelineLayout> pipelineLayout{ device, vkDestroyPipelineLayout };
 	VDeleter<VkPipeline> graphicsPipeline{ device, vkDestroyPipeline };
@@ -100,7 +102,8 @@ private:
 	VkQueue presentQueue;
 	VkQueue computeQueue;
 	VkQueue transferQueue;
-	VkDescriptorSet descriptorSet;
+
+	std::array<VkDescriptorSet,2> descriptorSets;
 
 	VDeleter<VkDebugReportCallbackEXT> callback{ instance,DestroyDebugReportCallbackEXT };
 

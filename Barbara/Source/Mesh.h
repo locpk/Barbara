@@ -10,6 +10,8 @@ private:
 private:
 	VDeleter<VkDevice>& device;
 	const std::string meshName;
+	int32_t materialID;
+
 
 	std::vector<Vertex> vertices;
 	std::vector<uint32_t> indices;
@@ -30,6 +32,11 @@ public:
 	void LoadMesh( tinyobj::attrib_t& attrib, tinyobj::shape_t& shape);
 	void CreateMeshBuffer(VkPhysicalDevice& physicalDevice, VDeleter<VkCommandPool>& commandPool, VkQueue& queue);
 
+
+	inline const int32_t GetMaterialID() const
+	{
+		return materialID;
+	}
 
 	inline const VDeleter<VkBuffer>& GetBuffer() const
 	{

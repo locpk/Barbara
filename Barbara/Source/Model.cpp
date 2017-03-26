@@ -25,6 +25,8 @@ Model::Model(VDeleter<VkDevice>& _device, VkPhysicalDevice& physicalDevice, VDel
 		newMesh.LoadMesh(attrib, shape);
 		newMesh.CreateMeshBuffer(physicalDevice, commandPool, queue);
 		meshes.emplace_back(std::move(newMesh));
+		
+	
 	}
 
 	//Materials

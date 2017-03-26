@@ -153,6 +153,16 @@ void VulkanApp::createDescriptorSetLayout()
 	ubLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 	ubLayoutBinding.pImmutableSamplers = nullptr;
 
+	VkDescriptorSetLayoutBinding ubBindings[] = { ubLayoutBinding };
+	VkDescriptorSetLayoutCreateInfo layoutInfo = {};
+	layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+	layoutInfo.bindingCount = 1;
+	layoutInfo.pBindings = ubBindings;
+
+	if (vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, ubDescriptorSetLayout.replace()) != VK_SUCCESS)
+	{
+		throw std::runtime_error("failed to create descriptor set layout!");
+	}
 
 	VkDescriptorSetLayoutBinding samplerLayoutBinding = {};
 	samplerLayoutBinding.binding = 1;
@@ -161,12 +171,11 @@ void VulkanApp::createDescriptorSetLayout()
 	samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 	samplerLayoutBinding.pImmutableSamplers = nullptr;
 
-	std::array<VkDescriptorSetLayoutBinding, 2> bindings = { ubLayoutBinding, samplerLayoutBinding };
 
-	VkDescriptorSetLayoutCreateInfo layoutInfo = {};
+	VkDescriptorSetLayoutBinding bindings[] = { samplerLayoutBinding };
 	layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-	layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
-	layoutInfo.pBindings = bindings.data();
+	layoutInfo.bindingCount = 1;
+	layoutInfo.pBindings = bindings;
 
 	if (vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, descriptorSetLayout.replace()) != VK_SUCCESS)
 	{
@@ -177,17 +186,29 @@ void VulkanApp::createDescriptorSetLayout()
 
 void VulkanApp::createDescriptorSet()
 {
-	VkDescriptorSetLayout layouts[] = { descriptorSetLayout };
+	VkDescriptorSetLayout layouts[] = { ubDescriptorSetLayout};
 	VkDescriptorSetAllocateInfo allocInfo = {};
 	allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-	allocInfo.descriptorPool = descriptorPool;
+	allocInfo.descriptorPool = ubDescriptorPool;
 	allocInfo.descriptorSetCount = 1;
 	allocInfo.pSetLayouts = layouts;
 
-	if (vkAllocateDescriptorSets(device, &allocInfo, &descriptorSet) != VK_SUCCESS)
+	if (vkAllocateDescriptorSets(device, &allocInfo, &descriptorSets[0]) != VK_SUCCESS)
 	{
-		throw std::runtime_error("failed to allocate descriptor set!");
+		throw std::runtime_error("failed to allocate descriptorSets[0]!");
 	}
+
+
+	layouts[0] = descriptorSetLayout;
+	allocInfo.descriptorPool = descriptorPool;
+	if (vkAllocateDescriptorSets(device, &allocInfo, &descriptorSets[1]) != VK_SUCCESS)
+	{
+		throw std::runtime_error("failed to allocate descriptorSets[1]!");
+	}
+
+
+
+
 
 	VkDescriptorBufferInfo bufferInfo = {};
 	bufferInfo.buffer = uniformBuffer;
@@ -201,7 +222,7 @@ void VulkanApp::createDescriptorSet()
 	std::array<VkWriteDescriptorSet, 2> descriptorWrites = {};
 
 	descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-	descriptorWrites[0].dstSet = descriptorSet;
+	descriptorWrites[0].dstSet = descriptorSets[0];
 	descriptorWrites[0].dstBinding = 0;
 	descriptorWrites[0].dstArrayElement = 0;
 	descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -209,7 +230,7 @@ void VulkanApp::createDescriptorSet()
 	descriptorWrites[0].pBufferInfo = &bufferInfo;
 
 	descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-	descriptorWrites[1].dstSet = descriptorSet;
+	descriptorWrites[1].dstSet = descriptorSets[1];
 	descriptorWrites[1].dstBinding = 1;
 	descriptorWrites[1].dstArrayElement = 0;
 	descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
@@ -221,11 +242,10 @@ void VulkanApp::createDescriptorSet()
 
 void VulkanApp::createDescriptorPool()
 {
-	std::array<VkDescriptorPoolSize, 2> poolSizes = {};
+	std::array<VkDescriptorPoolSize, 1> poolSizes = {};
 	poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 	poolSizes[0].descriptorCount = 1;
-	poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-	poolSizes[1].descriptorCount = 1;
+
 
 	VkDescriptorPoolCreateInfo poolInfo = {};
 	poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -233,7 +253,15 @@ void VulkanApp::createDescriptorPool()
 	poolInfo.pPoolSizes = poolSizes.data();
 	poolInfo.maxSets = 1;
 
-	if (vkCreateDescriptorPool(device, &poolInfo, nullptr, descriptorPool.replace()) != VK_SUCCESS)
+	if (vkCreateDescriptorPool(device, &poolInfo, nullptr, ubDescriptorPool.replace()) != VK_SUCCESS)
+	{
+		throw std::runtime_error("failed to create descriptor pool!");
+	}
+
+
+	poolSizes[0].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+	poolSizes[0].descriptorCount = 1;
+		if (vkCreateDescriptorPool(device, &poolInfo, nullptr, descriptorPool.replace()) != VK_SUCCESS)
 	{
 		throw std::runtime_error("failed to create descriptor pool!");
 	}
@@ -361,10 +389,10 @@ void VulkanApp::createGraphicsPipeline()
 	dynamicState.dynamicStateCount = 2;
 	dynamicState.pDynamicStates = dynamicStates;
 
-	VkDescriptorSetLayout setLayouts[] = { descriptorSetLayout };
+	VkDescriptorSetLayout setLayouts[] = { ubDescriptorSetLayout,descriptorSetLayout };
 	VkPipelineLayoutCreateInfo pipelineLayoutInfo = {};
 	pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-	pipelineLayoutInfo.setLayoutCount = 1;
+	pipelineLayoutInfo.setLayoutCount = 2;
 	pipelineLayoutInfo.pSetLayouts = setLayouts;
 
 
@@ -735,19 +763,11 @@ void VulkanApp::createCommandBuffers()
 			vkCmdBindIndexBuffer(commandBuffer, testMesh->GetMeshBuffer(i), sizeof(Vertex) * testMesh->GetMeshVerticesCount(i), VK_INDEX_TYPE_UINT32);
 
 			//Binding resources
-			vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSet, 0, nullptr);
+			vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 2, descriptorSets.data(), 0, nullptr);
 
 			vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(testMesh->GetMeshIndicesCount(i)), 1, 0, 0, 0);
 		}
-		//VkBuffer vertexBuffers[] = { testMesh->GetFirstMeshBuffer() };
-		//VkDeviceSize offsets[] = { 0 };
-		//vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
-		//vkCmdBindIndexBuffer(commandBuffer, testMesh->GetFirstMeshBuffer(), sizeof(Vertex) * testMesh->GetFirstMeshVertices().size(), VK_INDEX_TYPE_UINT32);
 
-		////Binding resources
-		//vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSet, 0, nullptr);
-
-		//vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(testMesh->GetFirstMeshIndices().size()), 1, 0, 0, 0);
 
 
 		vkCmdEndRenderPass(commandBuffer);
@@ -776,7 +796,7 @@ void VulkanApp::createSemaphores()
 
 void VulkanApp::loadModel()
 {
-	testMesh.reset(new Model(device, physicalDevice, transferCommandPool, transferQueue, std::forward<std::string>("head.obj")));
+	testMesh.reset(new Model(device, physicalDevice, transferCommandPool, transferQueue, std::forward<std::string>("nanosuit.obj")));
 }
 
 

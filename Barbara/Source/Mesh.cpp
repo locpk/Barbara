@@ -3,7 +3,7 @@
 
 
 
-Mesh::Mesh(VDeleter<VkDevice>& _device, std::string _meshName) : meshName(_meshName), device(_device)
+Mesh::Mesh(VDeleter<VkDevice>& _device, std::string _meshName) : meshName(_meshName), device(_device), materialID(-1)
 {
 
 }
@@ -53,7 +53,7 @@ void Mesh::LoadMesh(tinyobj::attrib_t& attrib, tinyobj::shape_t& shape)
 		indices.push_back(uniqueVertices[vertex]);
 
 	}
-
+	materialID = shape.mesh.material_ids[0];
 
 }
 
