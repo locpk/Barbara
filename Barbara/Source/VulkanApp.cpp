@@ -166,7 +166,7 @@ void VulkanApp::createDescriptorSetLayout()
 
 	VkDescriptorSetLayoutBinding samplerLayoutBinding = {};
 	samplerLayoutBinding.binding = 1;
-	samplerLayoutBinding.descriptorCount = 1;
+	samplerLayoutBinding.descriptorCount = 6;
 	samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 	samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 	samplerLayoutBinding.pImmutableSamplers = nullptr;
@@ -186,7 +186,7 @@ void VulkanApp::createDescriptorSetLayout()
 
 void VulkanApp::createDescriptorSet()
 {
-	VkDescriptorSetLayout layouts[] = { ubDescriptorSetLayout};
+	VkDescriptorSetLayout layouts[] = { ubDescriptorSetLayout };
 	VkDescriptorSetAllocateInfo allocInfo = {};
 	allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 	allocInfo.descriptorPool = ubDescriptorPool;
@@ -214,12 +214,19 @@ void VulkanApp::createDescriptorSet()
 	bufferInfo.buffer = uniformBuffer;
 	bufferInfo.offset = 0;
 	bufferInfo.range = sizeof(UniformBuffer);
-	VkDescriptorImageInfo imageInfo = {};
-	imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-	imageInfo.imageView = testMesh->GetFirstMaterialTextureViews()[0];
-	imageInfo.sampler = textureSampler;
 
-	std::array<VkWriteDescriptorSet, 2> descriptorWrites = {};
+
+	std::vector<VkDescriptorImageInfo> imageInfos(testMesh->GetMaterialCount());
+	for (size_t i = 0; i < imageInfos.size(); i++)
+	{
+		imageInfos[i].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+		imageInfos[i].imageView = testMesh->GetMaterials(i)[0];
+		imageInfos[i].sampler = textureSampler;
+	}
+
+	//std::vector<VkWriteDescriptorSet> descriptorWrites = {};
+	//descriptorWrites.resize(imageInfos.size() + 1);
+	 std::array<VkWriteDescriptorSet, 2> descriptorWrites = {};
 
 	descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 	descriptorWrites[0].dstSet = descriptorSets[0];
@@ -229,13 +236,15 @@ void VulkanApp::createDescriptorSet()
 	descriptorWrites[0].descriptorCount = 1;
 	descriptorWrites[0].pBufferInfo = &bufferInfo;
 
+
 	descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 	descriptorWrites[1].dstSet = descriptorSets[1];
 	descriptorWrites[1].dstBinding = 1;
 	descriptorWrites[1].dstArrayElement = 0;
 	descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-	descriptorWrites[1].descriptorCount = 1;
-	descriptorWrites[1].pImageInfo = &imageInfo;
+	descriptorWrites[1].descriptorCount = 6;
+	descriptorWrites[1].pImageInfo = imageInfos.data();
+
 
 	vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
 }
@@ -260,8 +269,8 @@ void VulkanApp::createDescriptorPool()
 
 
 	poolSizes[0].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-	poolSizes[0].descriptorCount = 1;
-		if (vkCreateDescriptorPool(device, &poolInfo, nullptr, descriptorPool.replace()) != VK_SUCCESS)
+	poolSizes[0].descriptorCount = 6;
+	if (vkCreateDescriptorPool(device, &poolInfo, nullptr, descriptorPool.replace()) != VK_SUCCESS)
 	{
 		throw std::runtime_error("failed to create descriptor pool!");
 	}
@@ -754,6 +763,8 @@ void VulkanApp::createCommandBuffers()
 		vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
 
+		//Binding resources
+		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 2, descriptorSets.data(), 0, nullptr);
 		for (size_t i = 0; i < testMesh->GetMeshCount(); i++)
 		{
 
@@ -762,8 +773,6 @@ void VulkanApp::createCommandBuffers()
 			vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
 			vkCmdBindIndexBuffer(commandBuffer, testMesh->GetMeshBuffer(i), sizeof(Vertex) * testMesh->GetMeshVerticesCount(i), VK_INDEX_TYPE_UINT32);
 
-			//Binding resources
-			vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 2, descriptorSets.data(), 0, nullptr);
 
 			vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(testMesh->GetMeshIndicesCount(i)), 1, 0, 0, 0);
 		}
@@ -919,9 +928,18 @@ void VulkanApp::update()
 
 	if (GLFW_PRESS == glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_2))
 	{
-		double posx, posy;
+		double posx, posy{ 0.0 };
+		//int sizeLeft, sizeTop, sizeRight, sizeBottom{ 0 };
 		glfwGetCursorPos(window, &posx, &posy);
-		glm::vec2 mouse_delta = mousePos - glm::vec2(posx, posy);
+		/*glfwsiz(window, &sizeLeft, &sizeTop, &sizeRight, &sizeBottom);
+		double Vrange = static_cast<double>(sizeRight - sizeLeft);
+		double Hrange = static_cast<double>(sizeTop - sizeBottom);
+
+		mouseCur = glm::clamp(mouseCur, glm::vec2(sizeLeft, sizeTop), glm::vec2(sizeRight, sizeBottom));
+		std::cout << sizeTop << " " << sizeBottom << ";";
+*/
+		glm::vec2 mouseCur = glm::vec2(posx, posy);
+		glm::vec2 mouse_delta = mousePos - mouseCur;
 
 		const float mouseX_Sensitivity = 0.0020f;
 		const float mouseY_Sensitivity = 0.0020f;

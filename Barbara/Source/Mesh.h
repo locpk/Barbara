@@ -10,7 +10,7 @@ private:
 private:
 	VDeleter<VkDevice>& device;
 	const std::string meshName;
-	int32_t materialID;
+	uint32_t materialID;
 
 
 	std::vector<Vertex> vertices;
@@ -24,7 +24,7 @@ private:
 	
 
 public:
-	Mesh(VDeleter<VkDevice>& _device, std::string _meshName = "CESAR");
+	Mesh(VDeleter<VkDevice>& _device, std::string _meshName = "CESAR", uint32_t _materialID = -1);
 	~Mesh();
 
 	Mesh(Mesh&& other);
@@ -33,7 +33,7 @@ public:
 	void CreateMeshBuffer(VkPhysicalDevice& physicalDevice, VDeleter<VkCommandPool>& commandPool, VkQueue& queue);
 
 
-	inline const int32_t GetMaterialID() const
+	inline const uint32_t GetMaterialID() const
 	{
 		return materialID;
 	}

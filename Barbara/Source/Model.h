@@ -27,7 +27,5 @@ public:
 
 	const VDeleter<VkBuffer>& GetMeshBuffer(size_t index) const;
 	const std::vector<VDeleter<VkImageView>>& GetMaterials(size_t index) const;
-
-	const std::vector<VDeleter<VkImageView>>& GetFirstMaterialTextureViews() const;
 };
 

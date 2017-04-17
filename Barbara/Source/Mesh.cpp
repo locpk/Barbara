@@ -3,7 +3,7 @@
 
 
 
-Mesh::Mesh(VDeleter<VkDevice>& _device, std::string _meshName) : meshName(_meshName), device(_device), materialID(-1)
+Mesh::Mesh(VDeleter<VkDevice>& _device, std::string _meshName, uint32_t _materialID) : meshName(_meshName), device(_device), materialID(_materialID)
 {
 
 }
