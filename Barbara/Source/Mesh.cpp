@@ -10,7 +10,7 @@ Mesh::Mesh(VDeleter<VkDevice>& _device, std::string _meshName, uint32_t _materia
 
 Mesh::Mesh(Mesh&& other) : device(other.device), meshName(other.meshName)
 {
-
+	materialID = other.materialID;
 	vertices = std::move(other.vertices);
 	indices = std::move(other.indices);
 	viBuffer = other.viBuffer;

@@ -404,6 +404,10 @@ void VulkanApp::createGraphicsPipeline()
 	pipelineLayoutInfo.setLayoutCount = 2;
 	pipelineLayoutInfo.pSetLayouts = setLayouts;
 
+	VkPushConstantRange pushConstantRange{ VK_SHADER_STAGE_FRAGMENT_BIT,0,sizeof(uint32_t) };
+	pipelineLayoutInfo.pushConstantRangeCount = 1;
+	pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
+
 
 	if (vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr,
 		pipelineLayout.replace()) != VK_SUCCESS) {
@@ -773,6 +777,9 @@ void VulkanApp::createCommandBuffers()
 			vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
 			vkCmdBindIndexBuffer(commandBuffer, testMesh->GetMeshBuffer(i), sizeof(Vertex) * testMesh->GetMeshVerticesCount(i), VK_INDEX_TYPE_UINT32);
 
+			uint32_t materialID = testMesh->GetMeshMaterialID(i);
+			
+			vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(materialID), &materialID);
 
 			vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(testMesh->GetMeshIndicesCount(i)), 1, 0, 0, 0);
 		}

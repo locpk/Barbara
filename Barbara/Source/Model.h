@@ -25,6 +25,7 @@ public:
 	size_t GetMeshVerticesCount(size_t index) const;
 	size_t GetMeshIndicesCount(size_t index) const;
 
+	uint32_t GetMeshMaterialID(size_t index) const;
 	const VDeleter<VkBuffer>& GetMeshBuffer(size_t index) const;
 	const std::vector<VDeleter<VkImageView>>& GetMaterials(size_t index) const;
 };

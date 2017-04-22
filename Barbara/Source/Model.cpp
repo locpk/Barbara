@@ -21,6 +21,7 @@ Model::Model(VDeleter<VkDevice>& _device, VkPhysicalDevice& physicalDevice, VDel
 	meshes.reserve(shapes.size());
 	for (auto& shape : shapes)
 	{
+		
 		Mesh newMesh{ _device,shape.name, static_cast<uint32_t>(shape.mesh.material_ids[0]) };
 		newMesh.LoadMesh(attrib, shape);
 		newMesh.CreateMeshBuffer(physicalDevice, commandPool, queue);
@@ -49,7 +50,10 @@ Model::~Model()
 }
 
 
-
+uint32_t Model::GetMeshMaterialID(size_t index) const
+{
+	return meshes[index].GetMaterialID();
+}
 
 size_t Model::GetMeshCount() const
 {
