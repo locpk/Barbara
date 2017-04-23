@@ -113,4 +113,10 @@ namespace VkUtilities
 	void copyBuffer(VDeleter<VkDevice>& device, VDeleter<VkCommandPool>& commandPool, VkQueue& queue, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 	void copyImage(VDeleter<VkDevice>& device, VDeleter<VkCommandPool>& commandPool, VkQueue& queue, VkImage srcImage, VkImage dstImage, uint32_t width, uint32_t height);
 
+
+	//Refactoring
+	void buildDescriptorSetLayout(VDeleter<VkDevice>& device, VkDescriptorSetLayout* descriptorSetLayout,
+		uint32_t bindingNumber, uint32_t descriptorCount, VkDescriptorType descriptorType,
+		VkShaderStageFlagBits stageFlags = VK_SHADER_STAGE_ALL,
+		const VkSampler* immutableSamplers = nullptr);
 }

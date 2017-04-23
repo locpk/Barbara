@@ -146,42 +146,8 @@ void VulkanApp::createTextureSampler()
 
 void VulkanApp::createDescriptorSetLayout()
 {
-	VkDescriptorSetLayoutBinding ubLayoutBinding = {};
-	ubLayoutBinding.binding = 0;
-	ubLayoutBinding.descriptorCount = 1;
-	ubLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-	ubLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-	ubLayoutBinding.pImmutableSamplers = nullptr;
-
-	VkDescriptorSetLayoutBinding ubBindings[] = { ubLayoutBinding };
-	VkDescriptorSetLayoutCreateInfo layoutInfo = {};
-	layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-	layoutInfo.bindingCount = 1;
-	layoutInfo.pBindings = ubBindings;
-
-	if (vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, ubDescriptorSetLayout.replace()) != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to create descriptor set layout!");
-	}
-
-	VkDescriptorSetLayoutBinding samplerLayoutBinding = {};
-	samplerLayoutBinding.binding = 1;
-	samplerLayoutBinding.descriptorCount = 6;
-	samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-	samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-	samplerLayoutBinding.pImmutableSamplers = nullptr;
-
-
-	VkDescriptorSetLayoutBinding bindings[] = { samplerLayoutBinding };
-	layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-	layoutInfo.bindingCount = 1;
-	layoutInfo.pBindings = bindings;
-
-	if (vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, descriptorSetLayout.replace()) != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to create descriptor set layout!");
-	}
-
+	buildDescriptorSetLayout(device, &ubDescriptorSetLayout, 0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT);
+	buildDescriptorSetLayout(device, &descriptorSetLayout, 1, 6, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT);
 }
 
 void VulkanApp::createDescriptorSet()

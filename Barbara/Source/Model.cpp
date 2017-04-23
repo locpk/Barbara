@@ -21,13 +21,10 @@ Model::Model(VDeleter<VkDevice>& _device, VkPhysicalDevice& physicalDevice, VDel
 	meshes.reserve(shapes.size());
 	for (auto& shape : shapes)
 	{
-		
 		Mesh newMesh{ _device,shape.name, static_cast<uint32_t>(shape.mesh.material_ids[0]) };
 		newMesh.LoadMesh(attrib, shape);
 		newMesh.CreateMeshBuffer(physicalDevice, commandPool, queue);
 		meshes.emplace_back(std::move(newMesh));
-
-
 	}
 
 	//Materials
@@ -35,7 +32,6 @@ Model::Model(VDeleter<VkDevice>& _device, VkPhysicalDevice& physicalDevice, VDel
 	for (auto& material : mats)
 	{
 		//Only load in diffuse textures for now
-
 		Material newMaterial{ _device,material.name };
 		materials.emplace_back(std::move(newMaterial));
 		materials[materials.size() - 1].LoadTexture(physicalDevice, commandPool, queue, material.diffuse_texname, Material::DIFFUSE);

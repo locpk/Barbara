@@ -546,4 +546,33 @@ namespace VkUtilities
 		endSingleTimeCommands(commandBuffer, device, commandPool, queue);
 	}
 
+
+
+
+
+	// Refactoring 
+	void buildDescriptorSetLayout(VDeleter<VkDevice>& device, VkDescriptorSetLayout* descriptorSetLayout,
+		uint32_t bindingNumber, uint32_t descriptorCount, VkDescriptorType descriptorType,
+		VkShaderStageFlagBits stageFlags,
+		const VkSampler* immutableSamplers)
+	{
+		VkDescriptorSetLayoutBinding layoutBinding = {};
+		layoutBinding.binding = bindingNumber;
+		layoutBinding.descriptorCount = descriptorCount;
+		layoutBinding.descriptorType = descriptorType;
+		layoutBinding.stageFlags = stageFlags;
+		layoutBinding.pImmutableSamplers = immutableSamplers;
+
+		VkDescriptorSetLayoutCreateInfo layoutInfo = {};
+		layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+		layoutInfo.bindingCount = 1;
+		layoutInfo.pBindings = &layoutBinding;
+
+		if (vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, descriptorSetLayout) != VK_SUCCESS)
+		{
+			throw std::runtime_error("failed to create descriptor set layout!");
+		}
+
+
+	}
 }
