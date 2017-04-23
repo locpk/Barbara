@@ -551,6 +551,42 @@ namespace VkUtilities
 
 
 	// Refactoring 
+
+	void allocateDescriptorSets(VDeleter<VkDevice>& device, VkDescriptorSetLayout* descriptorSetLayout, VkDescriptorPool descriptorPool, VkDescriptorSet* descriptorSet)
+	{
+		VkDescriptorSetAllocateInfo allocInfo = {};
+		allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+		allocInfo.descriptorPool = descriptorPool;
+		allocInfo.descriptorSetCount = 1;
+		allocInfo.pSetLayouts = descriptorSetLayout;
+
+		if (vkAllocateDescriptorSets(device, &allocInfo, descriptorSet) != VK_SUCCESS)
+		{
+			throw std::runtime_error("failed to allocate descriptorSet!");
+		}
+	}
+
+
+	void buildDescriptorPool(VDeleter<VkDevice>& device, VkDescriptorPool* descriptorPool, VkDescriptorType type, uint32_t descriptorCount)
+	{
+		VkDescriptorPoolSize poolSize = {};
+		poolSize.type = type;
+		poolSize.descriptorCount = descriptorCount;
+
+		VkDescriptorPoolCreateInfo poolInfo = {};
+		poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+		poolInfo.poolSizeCount = 1;
+		poolInfo.pPoolSizes = &poolSize;
+		poolInfo.maxSets = 1;
+
+		if (vkCreateDescriptorPool(device, &poolInfo, nullptr, descriptorPool) != VK_SUCCESS)
+		{
+			throw std::runtime_error("failed to create descriptor pool!");
+		}
+	}
+
+
+
 	void buildDescriptorSetLayout(VDeleter<VkDevice>& device, VkDescriptorSetLayout* descriptorSetLayout,
 		uint32_t bindingNumber, uint32_t descriptorCount, VkDescriptorType descriptorType,
 		VkShaderStageFlagBits stageFlags,
@@ -572,7 +608,5 @@ namespace VkUtilities
 		{
 			throw std::runtime_error("failed to create descriptor set layout!");
 		}
-
-
 	}
 }

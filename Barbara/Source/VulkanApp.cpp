@@ -152,27 +152,10 @@ void VulkanApp::createDescriptorSetLayout()
 
 void VulkanApp::createDescriptorSet()
 {
-	VkDescriptorSetLayout layouts[] = { ubDescriptorSetLayout };
-	VkDescriptorSetAllocateInfo allocInfo = {};
-	allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-	allocInfo.descriptorPool = ubDescriptorPool;
-	allocInfo.descriptorSetCount = 1;
-	allocInfo.pSetLayouts = layouts;
-
-	if (vkAllocateDescriptorSets(device, &allocInfo, &descriptorSets[0]) != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to allocate descriptorSets[0]!");
-	}
-
-
-	layouts[0] = descriptorSetLayout;
-	allocInfo.descriptorPool = descriptorPool;
-	if (vkAllocateDescriptorSets(device, &allocInfo, &descriptorSets[1]) != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to allocate descriptorSets[1]!");
-	}
-
-
+	buildDescriptorPool(device, &ubDescriptorPool, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1);
+	buildDescriptorPool(device, &descriptorPool, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 6);
+	allocateDescriptorSets(device, &ubDescriptorSetLayout, ubDescriptorPool, &descriptorSets[0]);
+	allocateDescriptorSets(device, &descriptorSetLayout, descriptorPool, &descriptorSets[1]);
 
 
 
@@ -215,32 +198,6 @@ void VulkanApp::createDescriptorSet()
 	vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
 }
 
-void VulkanApp::createDescriptorPool()
-{
-	std::array<VkDescriptorPoolSize, 1> poolSizes = {};
-	poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-	poolSizes[0].descriptorCount = 1;
-
-
-	VkDescriptorPoolCreateInfo poolInfo = {};
-	poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-	poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
-	poolInfo.pPoolSizes = poolSizes.data();
-	poolInfo.maxSets = 1;
-
-	if (vkCreateDescriptorPool(device, &poolInfo, nullptr, ubDescriptorPool.replace()) != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to create descriptor pool!");
-	}
-
-
-	poolSizes[0].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-	poolSizes[0].descriptorCount = 6;
-	if (vkCreateDescriptorPool(device, &poolInfo, nullptr, descriptorPool.replace()) != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to create descriptor pool!");
-	}
-}
 
 void VulkanApp::createGraphicsPipeline()
 {
@@ -825,7 +782,6 @@ void VulkanApp::initVulkan()
 	loadModel();
 	createTextureSampler();
 	InitUniformBuffer();
-	createDescriptorPool();
 	createDescriptorSet();
 	createCommandBuffers();
 	createSemaphores();

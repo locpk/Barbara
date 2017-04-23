@@ -115,6 +115,9 @@ namespace VkUtilities
 
 
 	//Refactoring
+	void allocateDescriptorSets(VDeleter<VkDevice>& device, VkDescriptorSetLayout* descriptorSetLayout, VkDescriptorPool descriptorPool, VkDescriptorSet* descriptorSet);
+	void buildDescriptorPool(VDeleter<VkDevice>& device, VkDescriptorPool* descriptorPool, VkDescriptorType type, uint32_t descriptorCount);
+
 	void buildDescriptorSetLayout(VDeleter<VkDevice>& device, VkDescriptorSetLayout* descriptorSetLayout,
 		uint32_t bindingNumber, uint32_t descriptorCount, VkDescriptorType descriptorType,
 		VkShaderStageFlagBits stageFlags = VK_SHADER_STAGE_ALL,

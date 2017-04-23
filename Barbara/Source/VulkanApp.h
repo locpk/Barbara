@@ -28,7 +28,6 @@ private:
 	void createImageViews();
 	void createRenderPass();
 	void createDescriptorSetLayout();
-	void createDescriptorPool();
 	void createDescriptorSet();
 	void createGraphicsPipeline();
 	void createShaderModule(const std::vector<char>& code, VDeleter<VkShaderModule>& shaderModule);
