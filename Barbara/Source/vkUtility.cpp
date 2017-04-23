@@ -548,11 +548,21 @@ namespace VkUtilities
 
 
 
-
+	void createShaderModule(VDeleter<VkDevice>& device, const std::vector<char>& code, VDeleter<VkShaderModule>& shaderModule)
+	{
+		VkShaderModuleCreateInfo createInfo = {};
+		createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+		createInfo.codeSize = code.size();
+		createInfo.pCode = (uint32_t*)code.data();
+		if (vkCreateShaderModule(device, &createInfo, nullptr, shaderModule.replace()) != VK_SUCCESS)
+		{
+			throw std::runtime_error("failed to create shader module!");
+		}
+	}
 
 	// Refactoring 
 
-	void allocateDescriptorSets(VDeleter<VkDevice>& device, VkDescriptorSetLayout* descriptorSetLayout, VkDescriptorPool descriptorPool, VkDescriptorSet* descriptorSet)
+	void allocateDescriptorSets(VDeleter<VkDevice>& device,const VkDescriptorSetLayout* descriptorSetLayout, VkDescriptorPool descriptorPool, VkDescriptorSet* descriptorSet)
 	{
 		VkDescriptorSetAllocateInfo allocInfo = {};
 		allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
@@ -565,7 +575,6 @@ namespace VkUtilities
 			throw std::runtime_error("failed to allocate descriptorSet!");
 		}
 	}
-
 
 	void buildDescriptorPool(VDeleter<VkDevice>& device, VkDescriptorPool* descriptorPool, VkDescriptorType type, uint32_t descriptorCount)
 	{
@@ -584,8 +593,6 @@ namespace VkUtilities
 			throw std::runtime_error("failed to create descriptor pool!");
 		}
 	}
-
-
 
 	void buildDescriptorSetLayout(VDeleter<VkDevice>& device, VkDescriptorSetLayout* descriptorSetLayout,
 		uint32_t bindingNumber, uint32_t descriptorCount, VkDescriptorType descriptorType,
@@ -607,6 +614,33 @@ namespace VkUtilities
 		if (vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, descriptorSetLayout) != VK_SUCCESS)
 		{
 			throw std::runtime_error("failed to create descriptor set layout!");
+		}
+	}
+
+	void createSampler(VDeleter<VkDevice>& device, VkSampler* sampler,
+		VkFilter filter,VkSamplerAddressMode samplerAddressMode)
+	{
+		VkSamplerCreateInfo samplerInfo = {};
+		samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+		samplerInfo.magFilter = filter;
+		samplerInfo.minFilter = filter;
+		samplerInfo.addressModeU = samplerAddressMode;
+		samplerInfo.addressModeV = samplerAddressMode;
+		samplerInfo.addressModeW = samplerAddressMode;
+		samplerInfo.anisotropyEnable = VK_TRUE;
+		samplerInfo.maxAnisotropy = 16;
+		samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+		samplerInfo.unnormalizedCoordinates = VK_FALSE;
+		samplerInfo.compareEnable = VK_FALSE;
+		samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
+		samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+		samplerInfo.mipLodBias = 0.0f;
+		samplerInfo.minLod = 0.0f;
+		samplerInfo.maxLod = 0.0f;
+
+		if (vkCreateSampler(device, &samplerInfo, nullptr, sampler) != VK_SUCCESS)
+		{
+			throw std::runtime_error("failed to create texture sampler!");
 		}
 	}
 }

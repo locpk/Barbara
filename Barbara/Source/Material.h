@@ -17,7 +17,7 @@ private:
 	std::vector<VDeleter<VkImageView>> textureImageViews;
 public:
 	Material(VDeleter<VkDevice>& _device, std::string _matName);
-	~Material();
+	~Material() = default;
 
 	void LoadTexture(VkPhysicalDevice& physicalDevice, VDeleter<VkCommandPool>& commandPool, VkQueue& queue, const std::string& filename, const TextureIndex& index);
 

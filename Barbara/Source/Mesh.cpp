@@ -85,6 +85,4 @@ void Mesh::CreateMeshBuffer(VkPhysicalDevice& physicalDevice, VDeleter<VkCommand
 	VkUtilities::copyBuffer(device, commandPool, queue, stagingBuffer, viBuffer, totalSize);
 }
 
-Mesh::~Mesh()
-{
-}
+

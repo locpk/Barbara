@@ -56,10 +56,7 @@ public:
 		return &object;
 	}
 
-	 T* operator &() 
-	{
-		return &object;
-	}
+
 
 	T* replace() 
 	{

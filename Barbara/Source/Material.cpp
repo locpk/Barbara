@@ -14,10 +14,6 @@ Material::Material(VDeleter<VkDevice>& _device, std::string _matName) :device(_d
 
 
 
-Material::~Material()
-{
-}
-
 
 
 void Material::LoadTexture(VkPhysicalDevice& physicalDevice, VDeleter<VkCommandPool>& commandPool, VkQueue& queue, const std::string& filename, const TextureIndex& index)

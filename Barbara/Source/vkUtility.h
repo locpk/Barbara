@@ -114,12 +114,17 @@ namespace VkUtilities
 	void copyImage(VDeleter<VkDevice>& device, VDeleter<VkCommandPool>& commandPool, VkQueue& queue, VkImage srcImage, VkImage dstImage, uint32_t width, uint32_t height);
 
 
+	void createShaderModule(VDeleter<VkDevice>& device, const std::vector<char>& code, VDeleter<VkShaderModule>& shaderModule);
+
 	//Refactoring
-	void allocateDescriptorSets(VDeleter<VkDevice>& device, VkDescriptorSetLayout* descriptorSetLayout, VkDescriptorPool descriptorPool, VkDescriptorSet* descriptorSet);
+	void allocateDescriptorSets(VDeleter<VkDevice>& device, const VkDescriptorSetLayout* descriptorSetLayout, VkDescriptorPool descriptorPool, VkDescriptorSet* descriptorSet);
 	void buildDescriptorPool(VDeleter<VkDevice>& device, VkDescriptorPool* descriptorPool, VkDescriptorType type, uint32_t descriptorCount);
 
 	void buildDescriptorSetLayout(VDeleter<VkDevice>& device, VkDescriptorSetLayout* descriptorSetLayout,
 		uint32_t bindingNumber, uint32_t descriptorCount, VkDescriptorType descriptorType,
 		VkShaderStageFlagBits stageFlags = VK_SHADER_STAGE_ALL,
 		const VkSampler* immutableSamplers = nullptr);
+
+	void createSampler(VDeleter<VkDevice>& device, VkSampler* sampler,
+		VkFilter filter, VkSamplerAddressMode samplerAddressMode);
 }

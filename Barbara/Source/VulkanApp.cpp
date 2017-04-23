@@ -1,7 +1,6 @@
 #include "VulkanApp.h"
 
 
-
 struct UniformBuffer
 {
 	glm::mat4 model;
@@ -11,9 +10,6 @@ struct UniformBuffer
 
 glm::vec2 mousePos{};
 
-
-
-
 static void onWindowResized(GLFWwindow* window, int width, int height)
 {
 	if (width == 0 || height == 0) return;
@@ -22,15 +18,6 @@ static void onWindowResized(GLFWwindow* window, int width, int height)
 	app->recreateSwapChain();
 
 }
-
-
-
-
-
-
-
-
-
 
 void  VulkanApp::createSwapChain()
 {
@@ -104,8 +91,6 @@ void VulkanApp::recreateSwapChain()
 	createCommandBuffers();
 }
 
-
-
 void VulkanApp::createImageViews()
 {
 	swapChainImageViews.resize(swapChainImages.size(), VDeleter<VkImageView>{device, vkDestroyImageView});
@@ -117,43 +102,23 @@ void VulkanApp::createImageViews()
 	}
 }
 
-
 void VulkanApp::createTextureSampler()
 {
-	VkSamplerCreateInfo samplerInfo = {};
-	samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-	samplerInfo.magFilter = VK_FILTER_LINEAR;
-	samplerInfo.minFilter = VK_FILTER_LINEAR;
-	samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-	samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-	samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-	samplerInfo.anisotropyEnable = VK_TRUE;
-	samplerInfo.maxAnisotropy = 16;
-	samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
-	samplerInfo.unnormalizedCoordinates = VK_FALSE;
-	samplerInfo.compareEnable = VK_FALSE;
-	samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
-	samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-	samplerInfo.mipLodBias = 0.0f;
-	samplerInfo.minLod = 0.0f;
-	samplerInfo.maxLod = 0.0f;
 
-	if (vkCreateSampler(device, &samplerInfo, nullptr, textureSampler.replace()) != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to create texture sampler!");
-	}
+	createSampler(device, textureSampler.replace(), VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT);
+
 }
 
 void VulkanApp::createDescriptorSetLayout()
 {
-	buildDescriptorSetLayout(device, &ubDescriptorSetLayout, 0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT);
-	buildDescriptorSetLayout(device, &descriptorSetLayout, 1, 6, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT);
+	buildDescriptorSetLayout(device, ubDescriptorSetLayout.replace(), 0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT);
+	buildDescriptorSetLayout(device, descriptorSetLayout.replace(), 1, 6, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT);
 }
 
 void VulkanApp::createDescriptorSet()
 {
-	buildDescriptorPool(device, &ubDescriptorPool, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1);
-	buildDescriptorPool(device, &descriptorPool, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 6);
+	buildDescriptorPool(device, ubDescriptorPool.replace(), VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1);
+	buildDescriptorPool(device, descriptorPool.replace(), VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 6);
 	allocateDescriptorSets(device, &ubDescriptorSetLayout, ubDescriptorPool, &descriptorSets[0]);
 	allocateDescriptorSets(device, &descriptorSetLayout, descriptorPool, &descriptorSets[1]);
 
@@ -175,7 +140,7 @@ void VulkanApp::createDescriptorSet()
 
 	//std::vector<VkWriteDescriptorSet> descriptorWrites = {};
 	//descriptorWrites.resize(imageInfos.size() + 1);
-	 std::array<VkWriteDescriptorSet, 2> descriptorWrites = {};
+	std::array<VkWriteDescriptorSet, 2> descriptorWrites = {};
 
 	descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 	descriptorWrites[0].dstSet = descriptorSets[0];
@@ -198,16 +163,12 @@ void VulkanApp::createDescriptorSet()
 	vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
 }
 
-
 void VulkanApp::createGraphicsPipeline()
 {
-	auto vertexShader = readFile("Source/GLSL/shader.vert.spv");
-	auto fragShader = readFile("Source/GLSL/shader.frag.spv");
-
 	VDeleter<VkShaderModule> vertShaderModule{ device, vkDestroyShaderModule };
 	VDeleter<VkShaderModule> fragShaderModule{ device, vkDestroyShaderModule };
-	createShaderModule(vertexShader, vertShaderModule);
-	createShaderModule(fragShader, fragShaderModule);
+	createShaderModule(device, readFile("Source/GLSL/shader.vert.spv"), vertShaderModule);
+	createShaderModule(device, readFile("Source/GLSL/shader.frag.spv"), fragShaderModule);
 
 	VkPipelineShaderStageCreateInfo vertShaderCreateInfo{};
 	vertShaderCreateInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
@@ -424,18 +385,6 @@ void VulkanApp::createRenderPass()
 	}
 }
 
-void VulkanApp::createShaderModule(const std::vector<char>& code, VDeleter<VkShaderModule>& shaderModule)
-{
-	VkShaderModuleCreateInfo createInfo = {};
-	createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-	createInfo.codeSize = code.size();
-	createInfo.pCode = (uint32_t*)code.data();
-	if (vkCreateShaderModule(device, &createInfo, nullptr, shaderModule.replace()) != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to create shader module!");
-	}
-}
-
 void VulkanApp::createFramebuffers()
 {
 	swapChainFramebuffers.resize(swapChainImageViews.size(), VDeleter<VkFramebuffer>{device, vkDestroyFramebuffer});
@@ -465,9 +414,6 @@ void VulkanApp::createFramebuffers()
 	}
 }
 
-
-
-
 void VulkanApp::run()
 {
 	initWindow();
@@ -482,16 +428,13 @@ void VulkanApp::initWindow()
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
 
-	window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);
+	window = glfwCreateWindow(WIDTH, HEIGHT, "Barbara", nullptr, nullptr);
 	glfwSetWindowUserPointer(window, this);
 	glfwSetWindowSizeCallback(window, onWindowResized);
 	glfwSetCursorPosCallback(window, [](GLFWwindow* window, double xpos, double ypos) {mousePos.x = static_cast<float>(xpos); mousePos.y = static_cast<float>(ypos); });
 
 
 }
-
-
-
 
 void VulkanApp::setupDebugCallback()
 {
@@ -546,7 +489,6 @@ void VulkanApp::createInstance()
 	}
 
 }
-
 
 void VulkanApp::pickPhysicalDevice()
 {
@@ -701,7 +643,7 @@ void VulkanApp::createCommandBuffers()
 			vkCmdBindIndexBuffer(commandBuffer, testMesh->GetMeshBuffer(i), sizeof(Vertex) * testMesh->GetMeshVerticesCount(i), VK_INDEX_TYPE_UINT32);
 
 			uint32_t materialID = testMesh->GetMeshMaterialID(i);
-			
+
 			vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(materialID), &materialID);
 
 			vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(testMesh->GetMeshIndicesCount(i)), 1, 0, 0, 0);
@@ -732,14 +674,10 @@ void VulkanApp::createSemaphores()
 	}
 }
 
-
 void VulkanApp::loadModel()
 {
 	testMesh.reset(new Model(device, physicalDevice, transferCommandPool, transferQueue, std::forward<std::string>("nanosuit.obj")));
 }
-
-
-
 
 void VulkanApp::InitUniformBuffer()
 {
@@ -747,14 +685,6 @@ void VulkanApp::InitUniformBuffer()
 	createBuffer(physicalDevice, device, uniformBufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, uniformStagingBuffer, uniformStagingBufferMemory);
 	createBuffer(physicalDevice, device, uniformBufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, uniformBuffer, uniformBufferMemory);
 }
-
-
-
-
-
-
-
-
 
 void VulkanApp::createDepthResources()
 {

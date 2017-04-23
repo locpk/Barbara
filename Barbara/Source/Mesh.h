@@ -25,7 +25,7 @@ private:
 
 public:
 	Mesh(VDeleter<VkDevice>& _device, std::string _meshName = "CESAR", uint32_t _materialID = 0);
-	~Mesh();
+	~Mesh() = default;
 
 	Mesh(Mesh&& other);
 

@@ -7,12 +7,12 @@ using namespace VkUtilities;
 
 
 
-
 class VulkanApp
 {
 public:
 	void run();
 	void recreateSwapChain();
+
 private:
 	GLFWwindow* window;
 
@@ -30,7 +30,6 @@ private:
 	void createDescriptorSetLayout();
 	void createDescriptorSet();
 	void createGraphicsPipeline();
-	void createShaderModule(const std::vector<char>& code, VDeleter<VkShaderModule>& shaderModule);
 	void createFramebuffers();
 	void createCommandPools();
 	void createCommandBuffers();
@@ -39,7 +38,7 @@ private:
 	void createTextureSampler();
 
 
-
+	
 	void InitUniformBuffer();
 	void setupDebugCallback();
 
