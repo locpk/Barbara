@@ -1,11 +1,18 @@
 #include "VulkanApp.h"
 
-
 struct UniformBuffer
 {
 	glm::mat4 model;
 	glm::mat4 view;
 	glm::mat4 proj;
+	glm::mat4 normalMat;
+	glm::vec3 camPos;
+};
+
+struct FSPushConstant
+{
+	glm::vec4	ambientLightColorAndIndex; //Alpha is the texture index
+	glm::vec3	lightPos;
 };
 
 glm::vec2 mousePos{};
@@ -288,7 +295,7 @@ void VulkanApp::createGraphicsPipeline()
 	pipelineLayoutInfo.setLayoutCount = 2;
 	pipelineLayoutInfo.pSetLayouts = setLayouts;
 
-	VkPushConstantRange pushConstantRange{ VK_SHADER_STAGE_FRAGMENT_BIT,0,sizeof(uint32_t) };
+	VkPushConstantRange pushConstantRange{ VK_SHADER_STAGE_FRAGMENT_BIT,0,sizeof(FSPushConstant) };
 	pipelineLayoutInfo.pushConstantRangeCount = 1;
 	pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
 
@@ -432,7 +439,6 @@ void VulkanApp::initWindow()
 	glfwSetWindowUserPointer(window, this);
 	glfwSetWindowSizeCallback(window, onWindowResized);
 	glfwSetCursorPosCallback(window, [](GLFWwindow* window, double xpos, double ypos) {mousePos.x = static_cast<float>(xpos); mousePos.y = static_cast<float>(ypos); });
-
 
 }
 
@@ -643,8 +649,11 @@ void VulkanApp::createCommandBuffers()
 			vkCmdBindIndexBuffer(commandBuffer, testMesh->GetMeshBuffer(i), sizeof(Vertex) * testMesh->GetMeshVerticesCount(i), VK_INDEX_TYPE_UINT32);
 
 			uint32_t materialID = testMesh->GetMeshMaterialID(i);
+			FSPushConstant fsPushConstant;
+			fsPushConstant.ambientLightColorAndIndex = { 0.7f,0.7f,0.7f,static_cast<float>(materialID)};
 
-			vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(materialID), &materialID);
+			fsPushConstant.lightPos = { 0.0f,100.0f,0.0f };
+			vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(fsPushConstant), &fsPushConstant);
 
 			vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(testMesh->GetMeshIndicesCount(i)), 1, 0, 0, 0);
 		}
@@ -753,10 +762,13 @@ void VulkanApp::update()
 	uniformBufferObj.model = glm::rotate(uniformBufferObj.model, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));*/
 	uniformBufferObj.model = glm::rotate(glm::mat4(), timeSinceStart * glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f)) * uniformBufferObj.model;
 	/*uniformBufferObj.model = glm::scale(uniformBufferObj.model, glm::vec3(0.1f, 0.1f, 0.1f));*/
+	uniformBufferObj.normalMat = glm::transpose(glm::inverse(uniformBufferObj.model));
+
+
 	uniformBufferObj.view = sCamera.GetView();
 	uniformBufferObj.proj = sCamera.GetProj();
 	uniformBufferObj.proj[1][1] *= -1;
-
+	uniformBufferObj.camPos = sCamera.GetPosition();
 	//Update uniformBuffer
 	void* data;
 	vkMapMemory(device, uniformStagingBufferMemory, 0, sizeof(uniformBufferObj), 0, &data);
